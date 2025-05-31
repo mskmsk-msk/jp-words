@@ -26,7 +26,7 @@
         .content-visible {
             visibility: visible;
             opacity: 1;
-            height: auto; /* Adjusted for dynamic content */
+            height: auto;
             transition: opacity 0.3s ease-in, height 0.3s ease-in;
         }
         .modal {
@@ -63,25 +63,19 @@
             text-decoration: none;
             cursor: pointer;
         }
-        .memorized-item {
-            background-color: #E0F2FE; /* Light blue for memorized */
-        }
-        .not-memorized-item {
-            background-color: #FEF3C7; /* Light yellow for not memorized */
-        }
-        .hidden {
-            display: none;
-        }
+        .memorized-item { background-color: #E0F2FE; }
+        .not-memorized-item { background-color: #FEF3C7; }
+        .hidden { display: none; }
         .choice-button {
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         .choice-button.correct {
-            background-color: #34D399 !important; /* Tailwind green-400 */
+            background-color: #34D399 !important;
             border-color: #34D399 !important;
             color: white !important;
         }
         .choice-button.incorrect {
-            background-color: #F87171 !important; /* Tailwind red-400 */
+            background-color: #F87171 !important;
             border-color: #F87171 !important;
             color: white !important;
         }
@@ -94,18 +88,9 @@
             opacity: 0.7;
             cursor: not-allowed;
         }
-        .word-display {
-            font-family: 'Noto Sans JP', sans-serif;
-        }
-        .reading-display {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 0.9em;
-            color: #555;
-        }
-        .meaning-display {
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-
+        .word-display { font-family: 'Noto Sans JP', sans-serif; }
+        .reading-display { font-family: 'Noto Sans JP', sans-serif; font-size: 0.9em; color: #555; }
+        .meaning-display { font-family: 'Noto Sans KR', sans-serif; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-green-400 via-cyan-500 to-blue-600 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-cyan-300 selection:text-cyan-900">
@@ -114,18 +99,16 @@
     <div class="bg-white shadow-2xl rounded-xl p-4 sm:p-6 w-full sm:w-[672px] card transform transition-all duration-500 ease-in-out">
         <div>
             <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-700 mb-4 sm:mb-6">일본어 단어 학습</h1>
-
             <div class="flex justify-between items-center mb-2">
                 <div id="wordIdEl" class="text-xs sm:text-sm text-gray-500 w-1/4"></div>
-                <button id="toggleMemorizedButton" class="text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none w-auto">
-                </button>
+                <button id="toggleMemorizedButton" class="text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none w-auto"></button>
             </div>
-
             <div id="wordDisplayContainer" class="w-full text-center mb-3 sm:mb-4 p-3 sm:p-4 bg-cyan-50 rounded-lg">
                 <div id="wordFormEl" class="word-display text-2xl sm:text-3xl md:text-4xl font-semibold text-cyan-700"></div>
-                <div id="wordReadingEl" class="reading-display text-lg sm:text-xl md:text-2xl text-cyan-600 mt-1"></div>
+                <div id="wordReadingElContainer" class="content-hidden">
+                    <div id="wordReadingEl" class="reading-display text-lg sm:text-xl md:text-2xl text-cyan-600 mt-1"></div>
+                </div>
             </div>
-
             <div id="detailsContainer">
                 <div id="meaningContainer" class="content-hidden">
                     <h2 class="text-base sm:text-lg md:text-xl font-semibold text-blue-700 mt-3 sm:mt-4 mb-1 sm:mb-2">뜻:</h2>
@@ -133,7 +116,6 @@
                 </div>
             </div>
         </div>
-
         <div class="mt-6 sm:mt-8 space-y-3">
             <div class="flex items-center gap-x-3">
                 <button id="showAllButton" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center justify-center">
@@ -143,19 +125,21 @@
                     <i class="fas fa-play mr-1.5"></i> 자동 재생
                 </button>
             </div>
-
             <div class="flex flex-col sm:flex-row sm:gap-x-3 items-stretch space-y-3 sm:space-y-0">
-                <button id="revealButton" class="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 flex items-center justify-center">
-                    뜻 보기
+                <button id="revealHiraganaButton" class="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 flex items-center justify-center">
+                    히라가나 보기
                 </button>
-                <div class="w-full sm:flex-1 flex gap-x-3">
-                    <button id="prevButton" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        이전
-                    </button>
-                    <button id="nextButton" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        다음
-                    </button>
-                </div>
+                <button id="revealMeaningButton" class="w-full sm:flex-1 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-teal-400 flex items-center justify-center mt-3 sm:mt-0">
+                    한글 뜻 보기
+                </button>
+            </div>
+            <div class="flex gap-x-3 mt-3">
+                <button id="prevButton" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-sky-300">
+                    이전
+                </button>
+                <button id="nextButton" class="flex-1 bg-red-500 hover:bg-lime-600 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-lime-300">
+                    다음
+                </button>
             </div>
         </div>
     </div>
@@ -492,10 +476,9 @@
 `;
 
     let wordData = [];
-
-    // --- 전역 변수 ---
     let currentCardIndex = 0;
-    let detailsVisible = false; // 뜻 보기/숨기기 상태
+    let hiraganaVisible = false;
+    let meaningVisible = false;
     let memorizedStatus = {};
     let isAutoPlaying = false;
     let speechQueue = [];
@@ -504,27 +487,26 @@
     let voices = [];
     let preferredKoreanVoice = null;
     let preferredJapaneseVoice = null;
-
-    let isTestMode = false; // 학습(4지선다) 모드 상태
+    let isTestMode = false;
     let currentTestItemIndex = 0;
     let shuffledTestData = [];
     let score = 0;
     let totalQuestionsInTest = 0;
 
-    // --- DOM 요소 가져오기 ---
     const learningModeContainerEl = document.getElementById('learningModeContainer');
     const wordIdEl = document.getElementById('wordIdEl');
     const wordFormEl = document.getElementById('wordFormEl');
+    const wordReadingElContainer = document.getElementById('wordReadingElContainer');
     const wordReadingEl = document.getElementById('wordReadingEl');
     const wordMeaningEl = document.getElementById('wordMeaningEl');
-    const revealButton = document.getElementById('revealButton');
+    const meaningContainerEl = document.getElementById('meaningContainer');
+    const revealHiraganaButton = document.getElementById('revealHiraganaButton');
+    const revealMeaningButton = document.getElementById('revealMeaningButton');
     const prevButton = document.getElementById('prevButton');
     const nextButton = document.getElementById('nextButton');
-    const meaningContainerEl = document.getElementById('meaningContainer');
     const toggleMemorizedButtonEl = document.getElementById('toggleMemorizedButton');
     const showAllButtonEl = document.getElementById('showAllButton');
     const playPauseButtonEl = document.getElementById('playPauseButton');
-
     const testModeContainerEl = document.getElementById('testModeContainer');
     const testProgressEl = document.getElementById('testProgressEl');
     const testWordFormEl = document.getElementById('testWordFormEl');
@@ -533,28 +515,24 @@
     const testResultEl = document.getElementById('testResultEl');
     const quitTestButtonEl = document.getElementById('quitTestButton');
     const nextTestItemButtonEl = document.getElementById('nextTestItemButton');
-
     const switchModeButtonEl = document.getElementById('switchModeButton');
     const modalEl = document.getElementById('allWordsModal');
     const closeModalButtonEl = document.getElementById('closeModalButton');
     const allWordsListEl = document.getElementById('allWordsListEl');
 
-
-    // --- 데이터 파싱 함수 ---
     function parseWordData() {
         const lines = rawWordData.trim().split('\n');
         wordData = lines.map((line, index) => {
             const parts = line.split('\t');
+            if (parts.length < 2) return null;
             const form = parts[0].trim();
             const readingAndMeaning = parts[1].split(',');
+            if (readingAndMeaning.length < 2) return null;
             const reading = readingAndMeaning[0].trim();
-            const meaning = readingAndMeaning.slice(1).join(',').trim(); // 뜻에 쉼표가 있을 경우 대비
+            const meaning = readingAndMeaning.slice(1).join(',').trim();
             return { id: index + 1, form, reading, meaning };
-        });
+        }).filter(item => item !== null);
     }
-
-    // --- 음성 합성 관련 함수 ---
-    function getJapaneseNumberString(num) { return String(num); }
 
     function loadVoices() {
         voices = synth.getVoices();
@@ -578,7 +556,7 @@
     if (synth.onvoiceschanged !== undefined) {
         synth.onvoiceschanged = loadVoices;
     }
-    loadVoices(); // 초기 로드
+    loadVoices();
 
     function speak(text, lang, callback) {
         if (voices.length === 0) loadVoices();
@@ -599,7 +577,7 @@
         utterance.onerror = (event) => {
             console.error('SpeechSynthesisUtterance.onerror:', event.error, event);
             if (isAutoPlaying && event.error !== 'canceled') {
-                alert(`음성 재생 중 오류: ${event.error || 'N/A'}. 자동 재생 중지.`);
+                if (typeof alert !== 'undefined') alert(`음성 재생 중 오류: ${event.error || 'N/A'}. 자동 재생 중지.`);
                 stopAutoPlay();
             }
             if (callback) callback();
@@ -607,25 +585,20 @@
         synth.speak(utterance);
     }
 
-    function cleanTextForSpeech(text) { // 문법 앱에서 가져왔지만, 단어 뜻에는 특수문자가 거의 없을 것이므로 단순화 가능
-        return text.replace(/\([^)]*\)/g, '').trim();
-    }
+    function cleanTextForSpeech(text) { return text.replace(/\([^)]*\)/g, '').trim(); }
 
-    // --- 낱말카드 모드 함수 ---
     function playCurrentCardAudio() {
-        if (!isAutoPlaying) return;
+        if (!isAutoPlaying || wordData.length === 0) return;
         const card = wordData[currentCardIndex];
-        if (memorizedStatus[card.id]) { playNextCard(); return; }
+        if (memorizedStatus[card.id] && wordData.length > 1) {
+            playNextCard();
+            return;
+        }
 
         speechQueue = [];
         currentSpeechUtteranceIndex = 0;
-
-        // 단어 표기 (한자 등) 읽기 - 한자만 있을 경우, 또는 히라가나/가타카나와 섞여있을 때 발음과 다를 수 있음.
-        // 여기서는 reading을 우선적으로 읽어주는 것이 자연스러움. form은 시각 정보로.
-        // speechQueue.push({ text: card.form, lang: 'ja-JP' });
-        speechQueue.push({ text: card.reading, lang: 'ja-JP' }); // 발음
-        speechQueue.push({ text: cleanTextForSpeech(card.meaning), lang: 'ko-KR' }); // 뜻
-
+        speechQueue.push({ text: card.reading, lang: 'ja-JP' });
+        speechQueue.push({ text: cleanTextForSpeech(card.meaning), lang: 'ko-KR' });
         playNextSpeechInQueue();
     }
 
@@ -642,27 +615,25 @@
     }
 
     function playNextCard() {
-        if (!isAutoPlaying) return;
-        currentCardIndex = (currentCardIndex + 1);
-        if (currentCardIndex >= wordData.length) {
-            stopAutoPlay();
-            alert("모든 단어 학습을 완료했습니다!");
-            return;
-        }
+        if (!isAutoPlaying || wordData.length === 0) return;
+        currentCardIndex = (currentCardIndex + 1) % wordData.length;
+
+        hiraganaVisible = true;
+        meaningVisible = true;
         displayCard();
-        if (isAutoPlaying) { // 자동 재생 시 뜻 항상 표시 (이전 요청 반영)
-            if (detailsVisible === false) showDetails();
-        }
         playCurrentCardAudio();
     }
 
     function startAutoPlay() {
-        if (isTestMode) return;
+        if (isTestMode || wordData.length === 0) return;
         if (synth.speaking) synth.cancel();
         isAutoPlaying = true;
-        playPauseButtonEl.innerHTML = '<i class="fas fa-pause mr-1"></i> 일시 정지';
+        playPauseButtonEl.innerHTML = '<i class="fas fa-pause mr-1.5"></i> 일시 정지';
         currentSpeechUtteranceIndex = 0;
-        if (detailsVisible === false) showDetails(); // 자동 재생 시작 시 뜻 표시
+
+        hiraganaVisible = true;
+        meaningVisible = true;
+        displayCard();
         playCurrentCardAudio();
     }
 
@@ -671,17 +642,18 @@
         synth.cancel();
         speechQueue = [];
         currentSpeechUtteranceIndex = 0;
-        playPauseButtonEl.innerHTML = '<i class="fas fa-play mr-1"></i> 자동 재생';
+        playPauseButtonEl.innerHTML = '<i class="fas fa-play mr-1.5"></i> 자동 재생';
     }
 
     function loadMemorizedStatus() {
-        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus');
+        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus_v2');
         if (storedStatus) { memorizedStatus = JSON.parse(storedStatus); }
     }
     function saveMemorizedStatus() {
-        localStorage.setItem('japaneseWordMemorizedStatus', JSON.stringify(memorizedStatus));
+        localStorage.setItem('japaneseWordMemorizedStatus_v2', JSON.stringify(memorizedStatus));
     }
     function updateMemorizedButton() {
+        if (wordData.length === 0) return;
         const card = wordData[currentCardIndex];
         if (memorizedStatus[card.id]) {
             toggleMemorizedButtonEl.textContent = '암기 ✅';
@@ -695,35 +667,54 @@
     function displayCard() {
         if (wordData.length === 0) return;
         const card = wordData[currentCardIndex];
-        wordIdEl.textContent = `ID: ${String(card.id).padStart(3, '0')}`;
+        wordIdEl.textContent = `ID: ${String(card.id).padStart(String(wordData.length).length, '0')}`;
         wordFormEl.textContent = card.form;
         wordReadingEl.textContent = card.reading;
         wordMeaningEl.textContent = card.meaning;
 
-        // 예문 클릭 음성 재생 기능은 단어장이므로 제거. 대신 단어/뜻 클릭 시 재생 가능하도록 수정
-        wordFormEl.onclick = () => speak(card.reading, 'ja-JP'); // 표기 클릭 시 발음 읽기
-        wordReadingEl.onclick = () => speak(card.reading, 'ja-JP'); // 발음 클릭 시 발음 읽기
-        wordMeaningEl.onclick = () => speak(card.meaning, 'ko-KR'); // 뜻 클릭 시 뜻 읽기
+        wordFormEl.onclick = () => speak(card.reading, 'ja-JP');
+        wordReadingEl.onclick = () => speak(card.reading, 'ja-JP');
+        wordMeaningEl.onclick = () => speak(card.meaning, 'ko-KR');
 
-        if (!detailsVisible) hideDetails(); // 자동재생이 아닌 일반 넘기기 시에는 상태 유지
+        if (hiraganaVisible) showHiraganaDOM(); else hideHiraganaDOM();
+        if (meaningVisible) showMeaningDOM(); else hideMeaningDOM();
+        updateRevealButtonsText();
         updateMemorizedButton();
     }
 
-    function hideDetails() { // 뜻 숨기기
+    function hideHiraganaDOM() {
+        wordReadingElContainer.classList.remove('content-visible');
+        wordReadingElContainer.classList.add('content-hidden');
+    }
+    function showHiraganaDOM() {
+        wordReadingElContainer.classList.remove('content-hidden');
+        wordReadingElContainer.classList.add('content-visible');
+    }
+    function hideMeaningDOM() {
         meaningContainerEl.classList.remove('content-visible');
         meaningContainerEl.classList.add('content-hidden');
-        detailsVisible = false;
-        revealButton.textContent = '뜻 보기';
     }
-
-    function showDetails() { // 뜻 보기
+    function showMeaningDOM() {
         meaningContainerEl.classList.remove('content-hidden');
         meaningContainerEl.classList.add('content-visible');
-        detailsVisible = true;
-        revealButton.textContent = '숨기기';
     }
 
-    // --- 학습/테스트 모드 함수 ---
+    function updateRevealButtonsText() {
+        revealHiraganaButton.textContent = hiraganaVisible ? '히라가나 숨기기' : '히라가나 보기';
+        revealMeaningButton.textContent = meaningVisible ? '한글 뜻 숨기기' : '한글 뜻 보기';
+    }
+
+    function toggleHiragana() {
+        hiraganaVisible = !hiraganaVisible;
+        if (hiraganaVisible) showHiraganaDOM(); else hideHiraganaDOM();
+        updateRevealButtonsText();
+    }
+    function toggleMeaning() {
+        meaningVisible = !meaningVisible;
+        if (meaningVisible) showMeaningDOM(); else hideMeaningDOM();
+        updateRevealButtonsText();
+    }
+
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -731,30 +722,21 @@
         }
         return array;
     }
-
     function generateChoices(correctMeaning, allWordData) {
         const choices = [correctMeaning];
-        // 모든 단어의 뜻 목록 (중복 제거)
         let otherMeanings = [...new Set(allWordData.map(item => item.meaning))].filter(m => m !== correctMeaning);
         shuffleArray(otherMeanings);
-
-        for (let i = 0; i < 3 && i < otherMeanings.length; i++) { // 최대 3개의 오답 추가
-            choices.push(otherMeanings[i]);
-        }
-        // 선택지가 4개 미만이면 더 채워넣으려고 시도 (데이터가 적을 경우)
+        for (let i = 0; i < 3 && i < otherMeanings.length; i++) { choices.push(otherMeanings[i]); }
         let attempts = 0;
-        while (choices.length < 4 && otherMeanings.length > (choices.length -1) && attempts < 10) {
-            const nextOption = otherMeanings[choices.length -1 + attempts]; // 이미 사용된 오답 다음 것부터 시도
-            if (nextOption && !choices.includes(nextOption)) {
-                choices.push(nextOption);
-            }
+        while (choices.length < 4 && otherMeanings.length > (choices.length -1 + attempts) && attempts < 10) {
+            const nextOption = otherMeanings[choices.length -1 + attempts];
+            if (nextOption && !choices.includes(nextOption)) { choices.push(nextOption); }
             attempts++;
         }
-        // 만약 데이터 부족으로 4개가 안되면 있는 만큼만 사용
         return shuffleArray(choices);
     }
-
     function loadTestItem() {
+        if (wordData.length === 0) return;
         if (currentTestItemIndex >= totalQuestionsInTest) {
             testResultEl.textContent = `학습 종료! 최종 점수: ${score} / ${totalQuestionsInTest}`;
             testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-blue-100 text-blue-700 h-10 meaning-display';
@@ -765,22 +747,19 @@
             quitTestButtonEl.textContent = "낱말카드로";
             return;
         }
-
         const item = shuffledTestData[currentTestItemIndex];
-        testProgressEl.textContent = `문제 ${currentTestItemIndex + 1} / ${totalQuestionsInTest} (ID: ${String(item.id).padStart(3, '0')})`;
+        testProgressEl.textContent = `문제 ${currentTestItemIndex + 1} / ${totalQuestionsInTest} (ID: ${String(item.id).padStart(String(wordData.length).length, '0')})`;
         testWordFormEl.textContent = item.form;
         testWordReadingEl.textContent = item.reading;
         testResultEl.textContent = '';
         testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md h-10 meaning-display';
         testChoicesEl.innerHTML = '';
-
         const choices = generateChoices(item.meaning, wordData);
-        if (choices.length < 2) { // 최소 2개의 선택지는 있어야 함 (정답 포함)
+        if (choices.length < 2) {
             testChoicesEl.innerHTML = '<p class="text-red-500 text-center">보기를 생성하기에 데이터가 부족합니다.</p>';
-            nextTestItemButtonEl.disabled = false; // 다음으로 넘어가게는 해줌
+            nextTestItemButtonEl.disabled = false;
             return;
         }
-
         choices.forEach(choiceText => {
             const choiceButton = document.createElement('button');
             choiceButton.textContent = choiceText;
@@ -790,21 +769,15 @@
         });
         nextTestItemButtonEl.disabled = true;
     }
-
     function handleChoiceSelection(selectedButton, selectedMeaning, correctMeaning) {
         const buttons = testChoicesEl.querySelectorAll('button');
         buttons.forEach(button => {
             button.disabled = true;
             button.classList.remove('hover:bg-indigo-100');
-            if (button.textContent === correctMeaning) {
-                button.classList.add('correct');
-            } else if (button === selectedButton && selectedMeaning !== correctMeaning) {
-                button.classList.add('selected-incorrect');
-            } else if (button.textContent !== correctMeaning) { // 선택하지 않은 오답
-                button.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-300', 'opacity-50');
-            }
+            if (button.textContent === correctMeaning) { button.classList.add('correct'); }
+            else if (button === selectedButton && selectedMeaning !== correctMeaning) { button.classList.add('selected-incorrect'); }
+            else if (button.textContent !== correctMeaning) { button.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-300', 'opacity-50');}
         });
-
         if (selectedMeaning === correctMeaning) {
             testResultEl.textContent = '정답입니다!';
             testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-green-100 text-green-700 h-10 meaning-display';
@@ -816,59 +789,69 @@
         nextTestItemButtonEl.disabled = false;
         nextTestItemButtonEl.focus();
     }
-
     function startTestMode() {
+        if (wordData.length === 0) {
+            if(typeof alert !== 'undefined') alert("학습할 단어가 없습니다.");
+            return;
+        }
         isTestMode = true;
         if (isAutoPlaying) stopAutoPlay();
-
         learningModeContainerEl.classList.add('hidden');
         testModeContainerEl.classList.remove('hidden');
-        switchModeButtonEl.innerHTML = '<i class="fas fa-book-open mr-1"></i> 낱말카드 모드';
+        switchModeButtonEl.innerHTML = '<i class="fas fa-book-open mr-1.5"></i> 낱말카드 모드';
         switchModeButtonEl.setAttribute('aria-label', '낱말카드 모드로 전환');
-
-
-        shuffledTestData = shuffleArray([...wordData]); // 전체 단어 사용
+        shuffledTestData = shuffleArray([...wordData]);
         currentTestItemIndex = 0;
         score = 0;
         totalQuestionsInTest = shuffledTestData.length;
-
         nextTestItemButtonEl.disabled = true;
         quitTestButtonEl.textContent = "학습 종료";
         testResultEl.textContent = '';
         loadTestItem();
     }
-
     function endTestMode() {
         isTestMode = false;
         learningModeContainerEl.classList.remove('hidden');
         testModeContainerEl.classList.add('hidden');
-        switchModeButtonEl.innerHTML = '<i class="fas fa-vial mr-1"></i> 학습/테스트 모드';
+        switchModeButtonEl.innerHTML = '<i class="fas fa-vial mr-1.5"></i> 학습/테스트 모드';
         switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
-
-
-        if (wordData.length > 0) displayCard();
+        if (wordData.length > 0) {
+            hiraganaVisible = false;
+            meaningVisible = false;
+            displayCard();
+        }
     }
 
-    // --- 이벤트 리스너 ---
     playPauseButtonEl.addEventListener('click', () => {
         if (isTestMode) return;
         if (isAutoPlaying) stopAutoPlay(); else startAutoPlay();
     });
-    revealButton.addEventListener('click', () => {
-        if (isAutoPlaying) stopAutoPlay(); // 자동 재생 중 뜻 보기 누르면 일단 자동재생 멈춤
-        if (detailsVisible) hideDetails(); else showDetails();
+    revealHiraganaButton.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay();
+        toggleHiragana();
+    });
+    revealMeaningButton.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay();
+        toggleMeaning();
     });
     prevButton.addEventListener('click', () => {
         if (isAutoPlaying) stopAutoPlay();
+        if (wordData.length === 0) return;
         currentCardIndex = (currentCardIndex - 1 + wordData.length) % wordData.length;
+        hiraganaVisible = false;
+        meaningVisible = false;
         displayCard();
     });
     nextButton.addEventListener('click', () => {
         if (isAutoPlaying) stopAutoPlay();
+        if (wordData.length === 0) return;
         currentCardIndex = (currentCardIndex + 1) % wordData.length;
+        hiraganaVisible = false;
+        meaningVisible = false;
         displayCard();
     });
     toggleMemorizedButtonEl.addEventListener('click', () => {
+        if (wordData.length === 0) return;
         const card = wordData[currentCardIndex];
         memorizedStatus[card.id] = !memorizedStatus[card.id];
         updateMemorizedButton();
@@ -876,24 +859,23 @@
     });
     showAllButtonEl.addEventListener('click', () => {
         if (isAutoPlaying) stopAutoPlay();
+        if (wordData.length === 0) return;
         allWordsListEl.innerHTML = '';
         wordData.forEach((item, index) => {
             const listItem = document.createElement('div');
             listItem.classList.add('p-2', 'rounded-md', 'cursor-pointer', 'hover:bg-gray-100', 'flex', 'justify-between', 'items-center', (memorizedStatus[item.id] ? 'memorized-item' : 'not-memorized-item'));
-
             const wordInfoSpan = document.createElement('span');
             wordInfoSpan.innerHTML = `<span class="word-display">${item.form}</span> <span class="reading-display">(${item.reading})</span>: <span class="meaning-display">${item.meaning}</span>`;
             wordInfoSpan.classList.add('text-sm', 'sm:text-base');
-
             const statusSpan = document.createElement('span');
             statusSpan.textContent = memorizedStatus[item.id] ? '✅' : '❌';
             statusSpan.classList.add('text-xs', 'sm:text-sm', 'ml-2', 'font-semibold', (memorizedStatus[item.id] ? 'text-green-600' : 'text-red-500'));
-
             listItem.appendChild(wordInfoSpan);
             listItem.appendChild(statusSpan);
-
             listItem.addEventListener('click', () => {
                 currentCardIndex = index;
+                hiraganaVisible = false;
+                meaningVisible = false;
                 displayCard();
                 modalEl.style.display = 'none';
             });
@@ -903,47 +885,40 @@
     });
     closeModalButtonEl.addEventListener('click', () => { modalEl.style.display = 'none'; });
     window.addEventListener('click', (event) => { if (event.target == modalEl) modalEl.style.display = 'none'; });
-
     quitTestButtonEl.addEventListener('click', endTestMode);
     nextTestItemButtonEl.addEventListener('click', () => {
         currentTestItemIndex++;
         loadTestItem();
     });
-
     switchModeButtonEl.addEventListener('click', () => {
-        if (isTestMode) {
-            endTestMode();
-        } else {
-            startTestMode();
-        }
+        if (isTestMode) endTestMode(); else startTestMode();
     });
 
-    // --- 앱 초기화 ---
     function initializeApp() {
-        parseWordData(); // 단어 데이터 파싱
+        parseWordData();
         loadMemorizedStatus();
+        const buttonsToDisable = [playPauseButtonEl, revealHiraganaButton, revealMeaningButton, prevButton, nextButton, switchModeButtonEl, showAllButtonEl, toggleMemorizedButtonEl];
+
         if (wordData.length > 0) {
+            hiraganaVisible = false;
+            meaningVisible = false;
             displayCard();
+            buttonsToDisable.forEach(btn => btn.disabled = false);
         } else {
             wordFormEl.textContent = "단어 데이터가 없습니다.";
+            wordReadingElContainer.classList.add('content-hidden');
             meaningContainerEl.classList.add('content-hidden');
-            // 버튼 비활성화 등 처리
-            showAllButtonEl.disabled = true;
-            playPauseButtonEl.disabled = true;
-            revealButton.disabled = true;
-            prevButton.disabled = true;
-            nextButton.disabled = true;
-            switchModeButtonEl.disabled = true;
+            buttonsToDisable.forEach(btn => btn.disabled = true);
+            if(typeof alert !== 'undefined') alert("학습할 단어 데이터가 없습니다. 단어 목록을 확인해주세요.");
         }
         learningModeContainerEl.classList.remove('hidden');
         testModeContainerEl.classList.add('hidden');
-        switchModeButtonEl.innerHTML = '<i class="fas fa-vial mr-1"></i> 학습/테스트 모드';
-        switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
-
+        if (switchModeButtonEl.innerHTML.includes('학습/테스트 모드')) { // 초기 상태일 때만 설정
+            switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
+        }
     }
 
     initializeApp();
 </script>
-
 </body>
 </html>
