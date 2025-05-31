@@ -46,10 +46,10 @@
             padding: 20px;
             border: 1px solid #888;
             width: 90%;
-            max-width: 600px;
+            max-width: 500px;
             border-radius: 0.5rem;
             max-height: 80vh;
-            overflow-y: scroll;
+            overflow-y: auto;
         }
         .close-button {
             color: #aaa;
@@ -91,17 +91,63 @@
         .word-display { font-family: 'Noto Sans JP', sans-serif; }
         .reading-display { font-family: 'Noto Sans JP', sans-serif; font-size: 0.9em; color: #555; }
         .meaning-display { font-family: 'Noto Sans KR', sans-serif; }
+        .top-icon-button {
+            color: #4B5563;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            font-size: 1.25rem;
+        }
+        .top-icon-button:hover {
+            color: #1F2937;
+            background-color: #E5E7EB;
+        }
+        .settings-modal-button {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            color: #374151;
+            background-color: #F3F4F6;
+            border: 1px solid #D1D5DB;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .settings-modal-button:hover:not(:disabled) {
+            background-color: #E5E7EB;
+            border-color: #9CA3AF;
+        }
+        .settings-modal-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .settings-modal-button i {
+            margin-right: 0.75rem;
+            color: #4B5563;
+            width: 1.25rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-green-400 via-cyan-500 to-blue-600 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-cyan-300 selection:text-cyan-900">
 
 <div id="learningModeContainer" class="flex justify-center w-full">
     <div class="bg-white shadow-2xl rounded-xl p-4 sm:p-6 w-full sm:w-[672px] card transform transition-all duration-500 ease-in-out">
+        <div id="appTopBar" class="w-full flex justify-between items-center py-2 mb-3">
+            <button id="playPauseButton" class="top-icon-button focus:outline-none">
+                <i class="fas fa-play"></i>
+            </button>
+            <button id="settingsButton" class="top-icon-button focus:outline-none">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
         <div>
             <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-700 mb-4 sm:mb-6">일본어 단어 학습</h1>
             <div class="flex justify-between items-center mb-2">
-                <div id="wordIdEl" class="text-xs sm:text-sm text-gray-500 w-1/4"></div>
-                <button id="toggleMemorizedButton" class="text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none w-auto"></button>
+                <div id="wordIdEl" class="text-xs sm:text-sm text-gray-500"></div>
+                <button id="toggleMemorizedButton" class="text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none"></button>
             </div>
             <div id="wordDisplayContainer" class="w-full text-center mb-3 sm:mb-4 p-3 sm:p-4 bg-cyan-50 rounded-lg">
                 <div id="wordFormEl" class="word-display text-2xl sm:text-3xl md:text-4xl font-semibold text-cyan-700"></div>
@@ -117,14 +163,6 @@
             </div>
         </div>
         <div class="mt-6 sm:mt-8 space-y-3">
-            <div class="flex items-center gap-x-3">
-                <button id="showAllButton" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center justify-center">
-                    <i class="fas fa-list-ul mr-1.5"></i> 전체 단어
-                </button>
-                <button id="playPauseButton" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center">
-                    <i class="fas fa-play mr-1.5"></i> 자동 재생
-                </button>
-            </div>
             <div class="flex flex-col sm:flex-row sm:gap-x-3 items-stretch space-y-3 sm:space-y-0">
                 <button id="revealHiraganaButton" class="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 flex items-center justify-center">
                     히라가나 보기
@@ -133,11 +171,11 @@
                     한글 뜻 보기
                 </button>
             </div>
-            <div class="flex gap-x-3 mt-3">
-                <button id="prevButton" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-sky-300">
+            <div class="flex items-center gap-x-3 mt-3">
+                <button id="prevButton" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-sky-300">
                     이전
                 </button>
-                <button id="nextButton" class="flex-1 bg-red-500 hover:bg-lime-600 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-lime-300">
+                <button id="nextButton" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-300">
                     다음
                 </button>
             </div>
@@ -147,13 +185,12 @@
 
 <div id="testModeContainer" class="hidden bg-white shadow-2xl rounded-xl p-4 sm:p-6 w-full max-w-2xl card transform transition-all duration-500 ease-in-out">
     <div>
-        <h2 class="text-xl sm:text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500 mb-4 sm:mb-6">단어 학습 (4지선다)</h2>
+        <h2 class="text-xl sm:text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500 mb-4 sm:mb-6">단어 학습 (발음 선택)</h2>
         <div id="testProgressEl" class="text-sm text-gray-600 mb-2 text-center"></div>
-        <div id="testWordFormEl" class="w-full text-lg sm:text-xl md:text-2xl font-semibold text-teal-700 mb-1 p-3 sm:p-4 bg-teal-50 rounded-lg text-center word-display"></div>
-        <div id="testWordReadingEl" class="w-full text-base sm:text-lg md:text-xl text-teal-600 mb-3 sm:mb-4 text-center reading-display"></div>
+        <div id="testWordFormEl" class="w-full text-lg sm:text-xl md:text-2xl font-semibold text-teal-700 mb-3 p-3 sm:p-4 bg-teal-50 rounded-lg text-center word-display"></div>
         <div id="testChoicesEl" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         </div>
-        <div id="testResultEl" class="text-center font-semibold mb-4 p-2 rounded-md h-10 meaning-display">
+        <div id="testResultEl" class="text-center font-semibold mb-4 p-2 rounded-md min-h-[2.5rem] meaning-display">
         </div>
     </div>
     <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
@@ -166,20 +203,34 @@
     </div>
 </div>
 
-<div class="mt-4 w-full max-w-2xl flex justify-center">
-    <button id="switchModeButton" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md text-base focus:outline-none focus:ring-2 focus:ring-yellow-400">
-        <i class="fas fa-vial mr-1"></i> 학습/테스트 모드
-    </button>
-</div>
-
 <div id="allWordsModal" class="modal">
     <div class="modal-content">
-        <span class="close-button" id="closeModalButton">&times;</span>
+        <span class="close-button" id="closeAllWordsModalButton">&times;</span>
         <h2 class="text-xl sm:text-2xl font-bold text-center text-indigo-600 mb-4">전체 단어 목록</h2>
         <div id="allWordsListEl" class="space-y-2">
         </div>
     </div>
 </div>
+
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="closeSettingsModalButton">&times;</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-center text-indigo-600 mb-6">설정</h2>
+        <button id="shuffleCardsButton" class="settings-modal-button">
+            <i class="fas fa-random"></i> 카드 순서 섞기
+        </button>
+        <button id="resetCardOrderButton" class="settings-modal-button" disabled>
+            <i class="fas fa-undo"></i> 카드 순서 원래대로
+        </button>
+        <button id="openAllWordsListFromSettingsButton" class="settings-modal-button">
+            <i class="fas fa-list-ul"></i> 전체 단어 목록 보기
+        </button>
+        <button id="switchModeInSettingsButton" class="settings-modal-button">
+            <i class="fas fa-vial"></i> 학습/테스트 모드 전환
+        </button>
+    </div>
+</div>
+
 
 <script>
     const rawWordData = `
@@ -476,6 +527,8 @@
 `;
 
     let wordData = [];
+    let originalWordData = [];
+    let isShuffled = false;
     let currentCardIndex = 0;
     let hiraganaVisible = false;
     let meaningVisible = false;
@@ -494,6 +547,7 @@
     let totalQuestionsInTest = 0;
 
     const learningModeContainerEl = document.getElementById('learningModeContainer');
+    const appTopBarEl = document.getElementById('appTopBar');
     const wordIdEl = document.getElementById('wordIdEl');
     const wordFormEl = document.getElementById('wordFormEl');
     const wordReadingElContainer = document.getElementById('wordReadingElContainer');
@@ -505,24 +559,31 @@
     const prevButton = document.getElementById('prevButton');
     const nextButton = document.getElementById('nextButton');
     const toggleMemorizedButtonEl = document.getElementById('toggleMemorizedButton');
-    const showAllButtonEl = document.getElementById('showAllButton');
     const playPauseButtonEl = document.getElementById('playPauseButton');
+    const settingsButtonEl = document.getElementById('settingsButton');
     const testModeContainerEl = document.getElementById('testModeContainer');
     const testProgressEl = document.getElementById('testProgressEl');
     const testWordFormEl = document.getElementById('testWordFormEl');
-    const testWordReadingEl = document.getElementById('testWordReadingEl');
     const testChoicesEl = document.getElementById('testChoicesEl');
     const testResultEl = document.getElementById('testResultEl');
     const quitTestButtonEl = document.getElementById('quitTestButton');
     const nextTestItemButtonEl = document.getElementById('nextTestItemButton');
-    const switchModeButtonEl = document.getElementById('switchModeButton');
-    const modalEl = document.getElementById('allWordsModal');
-    const closeModalButtonEl = document.getElementById('closeModalButton');
+
+    const allWordsModalEl = document.getElementById('allWordsModal');
+    const closeAllWordsModalButtonEl = document.getElementById('closeAllWordsModalButton');
     const allWordsListEl = document.getElementById('allWordsListEl');
+
+    const settingsModalEl = document.getElementById('settingsModal');
+    const closeSettingsModalButtonEl = document.getElementById('closeSettingsModalButton');
+    const shuffleCardsButtonEl = document.getElementById('shuffleCardsButton');
+    const resetCardOrderButtonEl = document.getElementById('resetCardOrderButton');
+    const openAllWordsListFromSettingsButtonEl = document.getElementById('openAllWordsListFromSettingsButton');
+    const switchModeInSettingsButtonEl = document.getElementById('switchModeInSettingsButton');
+
 
     function parseWordData() {
         const lines = rawWordData.trim().split('\n');
-        wordData = lines.map((line, index) => {
+        const parsedData = lines.map((line, index) => {
             const parts = line.split('\t');
             if (parts.length < 2) return null;
             const form = parts[0].trim();
@@ -532,6 +593,8 @@
             const meaning = readingAndMeaning.slice(1).join(',').trim();
             return { id: index + 1, form, reading, meaning };
         }).filter(item => item !== null);
+        wordData = [...parsedData];
+        originalWordData = [...parsedData];
     }
 
     function loadVoices() {
@@ -576,7 +639,8 @@
         utterance.onend = () => { if (callback) callback(); };
         utterance.onerror = (event) => {
             console.error('SpeechSynthesisUtterance.onerror:', event.error, event);
-            if (isAutoPlaying && event.error !== 'canceled') {
+            const isCancellationError = event.error === 'canceled' || event.error === 'interrupted';
+            if (isAutoPlaying && !isCancellationError) {
                 if (typeof alert !== 'undefined') alert(`음성 재생 중 오류: ${event.error || 'N/A'}. 자동 재생 중지.`);
                 stopAutoPlay();
             }
@@ -617,7 +681,6 @@
     function playNextCard() {
         if (!isAutoPlaying || wordData.length === 0) return;
         currentCardIndex = (currentCardIndex + 1) % wordData.length;
-
         hiraganaVisible = true;
         meaningVisible = true;
         displayCard();
@@ -628,9 +691,8 @@
         if (isTestMode || wordData.length === 0) return;
         if (synth.speaking) synth.cancel();
         isAutoPlaying = true;
-        playPauseButtonEl.innerHTML = '<i class="fas fa-pause mr-1.5"></i> 일시 정지';
+        playPauseButtonEl.innerHTML = '<i class="fas fa-pause"></i>';
         currentSpeechUtteranceIndex = 0;
-
         hiraganaVisible = true;
         meaningVisible = true;
         displayCard();
@@ -642,15 +704,15 @@
         synth.cancel();
         speechQueue = [];
         currentSpeechUtteranceIndex = 0;
-        playPauseButtonEl.innerHTML = '<i class="fas fa-play mr-1.5"></i> 자동 재생';
+        playPauseButtonEl.innerHTML = '<i class="fas fa-play"></i>';
     }
 
     function loadMemorizedStatus() {
-        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus_v2');
+        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus_v4');
         if (storedStatus) { memorizedStatus = JSON.parse(storedStatus); }
     }
     function saveMemorizedStatus() {
-        localStorage.setItem('japaneseWordMemorizedStatus_v2', JSON.stringify(memorizedStatus));
+        localStorage.setItem('japaneseWordMemorizedStatus_v4', JSON.stringify(memorizedStatus));
     }
     function updateMemorizedButton() {
         if (wordData.length === 0) return;
@@ -667,7 +729,7 @@
     function displayCard() {
         if (wordData.length === 0) return;
         const card = wordData[currentCardIndex];
-        wordIdEl.textContent = `ID: ${String(card.id).padStart(String(wordData.length).length, '0')}`;
+        wordIdEl.textContent = `ID: ${String(card.id).padStart(String(originalWordData.length).length, '0')}`;
         wordFormEl.textContent = card.form;
         wordReadingEl.textContent = card.reading;
         wordMeaningEl.textContent = card.meaning;
@@ -722,14 +784,14 @@
         }
         return array;
     }
-    function generateChoices(correctMeaning, allWordData) {
-        const choices = [correctMeaning];
-        let otherMeanings = [...new Set(allWordData.map(item => item.meaning))].filter(m => m !== correctMeaning);
-        shuffleArray(otherMeanings);
-        for (let i = 0; i < 3 && i < otherMeanings.length; i++) { choices.push(otherMeanings[i]); }
+    function generateTestChoices(correctReading, allWordData) {
+        const choices = [correctReading];
+        let otherReadings = [...new Set(allWordData.map(item => item.reading))].filter(r => r !== correctReading);
+        shuffleArray(otherReadings);
+        for (let i = 0; i < 3 && i < otherReadings.length; i++) { choices.push(otherReadings[i]); }
         let attempts = 0;
-        while (choices.length < 4 && otherMeanings.length > (choices.length -1 + attempts) && attempts < 10) {
-            const nextOption = otherMeanings[choices.length -1 + attempts];
+        while (choices.length < 4 && otherReadings.length > (choices.length -1 + attempts) && attempts < 10) {
+            const nextOption = otherReadings[choices.length -1 + attempts];
             if (nextOption && !choices.includes(nextOption)) { choices.push(nextOption); }
             attempts++;
         }
@@ -737,24 +799,25 @@
     }
     function loadTestItem() {
         if (wordData.length === 0) return;
+        const currentWord = shuffledTestData[currentTestItemIndex];
+
         if (currentTestItemIndex >= totalQuestionsInTest) {
-            testResultEl.textContent = `학습 종료! 최종 점수: ${score} / ${totalQuestionsInTest}`;
-            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-blue-100 text-blue-700 h-10 meaning-display';
+            testResultEl.innerHTML = `학습 종료! 최종 점수: ${score} / ${totalQuestionsInTest}`;
+            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-blue-100 text-blue-700 min-h-[2.5rem] meaning-display';
             testWordFormEl.textContent = "모든 문제를 다 풀었습니다!";
-            testWordReadingEl.textContent = "";
             testChoicesEl.innerHTML = '';
             nextTestItemButtonEl.disabled = true;
             quitTestButtonEl.textContent = "낱말카드로";
             return;
         }
-        const item = shuffledTestData[currentTestItemIndex];
-        testProgressEl.textContent = `문제 ${currentTestItemIndex + 1} / ${totalQuestionsInTest} (ID: ${String(item.id).padStart(String(wordData.length).length, '0')})`;
-        testWordFormEl.textContent = item.form;
-        testWordReadingEl.textContent = item.reading;
+
+        testProgressEl.textContent = `문제 ${currentTestItemIndex + 1} / ${totalQuestionsInTest} (ID: ${String(currentWord.id).padStart(String(originalWordData.length).length, '0')})`;
+        testWordFormEl.textContent = currentWord.form;
         testResultEl.textContent = '';
-        testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md h-10 meaning-display';
+        testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md min-h-[2.5rem] meaning-display';
         testChoicesEl.innerHTML = '';
-        const choices = generateChoices(item.meaning, wordData);
+
+        const choices = generateTestChoices(currentWord.reading, wordData);
         if (choices.length < 2) {
             testChoicesEl.innerHTML = '<p class="text-red-500 text-center">보기를 생성하기에 데이터가 부족합니다.</p>';
             nextTestItemButtonEl.disabled = false;
@@ -763,32 +826,47 @@
         choices.forEach(choiceText => {
             const choiceButton = document.createElement('button');
             choiceButton.textContent = choiceText;
-            choiceButton.classList.add('choice-button', 'p-3', 'rounded-md', 'border', 'border-gray-300', 'hover:bg-indigo-100', 'focus:outline-none', 'focus:ring-2', 'focus:ring-indigo-400', 'text-sm', 'sm:text-base', 'meaning-display');
-            choiceButton.addEventListener('click', () => handleChoiceSelection(choiceButton, choiceText, item.meaning));
+            choiceButton.classList.add('choice-button', 'p-3', 'rounded-md', 'border', 'border-gray-300', 'hover:bg-indigo-100', 'focus:outline-none', 'focus:ring-2', 'focus:ring-indigo-400', 'text-sm', 'sm:text-base', 'reading-display');
+            choiceButton.addEventListener('click', () => handleTestChoiceSelection(choiceButton, choiceText, currentWord));
             testChoicesEl.appendChild(choiceButton);
         });
         nextTestItemButtonEl.disabled = true;
     }
-    function handleChoiceSelection(selectedButton, selectedMeaning, correctMeaning) {
+
+    function handleTestChoiceSelection(selectedButton, selectedReading, correctWord) {
         const buttons = testChoicesEl.querySelectorAll('button');
         buttons.forEach(button => {
             button.disabled = true;
             button.classList.remove('hover:bg-indigo-100');
-            if (button.textContent === correctMeaning) { button.classList.add('correct'); }
-            else if (button === selectedButton && selectedMeaning !== correctMeaning) { button.classList.add('selected-incorrect'); }
-            else if (button.textContent !== correctMeaning) { button.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-300', 'opacity-50');}
+            if (button.textContent === correctWord.reading) { button.classList.add('correct'); }
+            else if (button === selectedButton && selectedReading !== correctWord.reading) { button.classList.add('selected-incorrect'); }
+            else if (button.textContent !== correctWord.reading) { button.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-300', 'opacity-50');}
         });
-        if (selectedMeaning === correctMeaning) {
-            testResultEl.textContent = '정답입니다!';
-            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-green-100 text-green-700 h-10 meaning-display';
+
+        let resultHTML = '';
+        if (selectedReading === correctWord.reading) {
+            resultHTML = `<span class="text-green-700">정답!</span> ${correctWord.form} (<span class="reading-display">${correctWord.reading}</span>): ${correctWord.meaning}`;
+            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-green-100 text-green-700 min-h-[2.5rem]';
             score++;
         } else {
-            testResultEl.textContent = `오답입니다. 정답: ${correctMeaning}`;
-            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-red-100 text-red-700 h-10 meaning-display';
+            resultHTML = `<span class="text-red-700">오답.</span> 정답: ${correctWord.form} (<span class="reading-display">${correctWord.reading}</span>): ${correctWord.meaning}`;
+            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-red-100 text-red-700 min-h-[2.5rem]';
         }
+        testResultEl.innerHTML = resultHTML;
         nextTestItemButtonEl.disabled = false;
         nextTestItemButtonEl.focus();
     }
+
+    function toggleAppMode() {
+        if (isTestMode) {
+            endTestMode();
+        } else {
+            startTestMode();
+        }
+        settingsModalEl.style.display = 'none';
+    }
+
+
     function startTestMode() {
         if (wordData.length === 0) {
             if(typeof alert !== 'undefined') alert("학습할 단어가 없습니다.");
@@ -798,8 +876,9 @@
         if (isAutoPlaying) stopAutoPlay();
         learningModeContainerEl.classList.add('hidden');
         testModeContainerEl.classList.remove('hidden');
-        switchModeButtonEl.innerHTML = '<i class="fas fa-book-open mr-1.5"></i> 낱말카드 모드';
-        switchModeButtonEl.setAttribute('aria-label', '낱말카드 모드로 전환');
+        appTopBarEl.classList.add('hidden');
+        switchModeInSettingsButtonEl.innerHTML = '<i class="fas fa-book-open"></i> 낱말카드 모드로';
+
         shuffledTestData = shuffleArray([...wordData]);
         currentTestItemIndex = 0;
         score = 0;
@@ -813,8 +892,8 @@
         isTestMode = false;
         learningModeContainerEl.classList.remove('hidden');
         testModeContainerEl.classList.add('hidden');
-        switchModeButtonEl.innerHTML = '<i class="fas fa-vial mr-1.5"></i> 학습/테스트 모드';
-        switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
+        appTopBarEl.classList.remove('hidden');
+        switchModeInSettingsButtonEl.innerHTML = '<i class="fas fa-vial"></i> 학습/테스트 모드로';
         if (wordData.length > 0) {
             hiraganaVisible = false;
             meaningVisible = false;
@@ -822,10 +901,90 @@
         }
     }
 
+    function updateSettingsButtonsState() {
+        if (resetCardOrderButtonEl) {
+            resetCardOrderButtonEl.disabled = !isShuffled;
+            if(!isShuffled) {
+                resetCardOrderButtonEl.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                resetCardOrderButtonEl.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    }
+
+
     playPauseButtonEl.addEventListener('click', () => {
         if (isTestMode) return;
         if (isAutoPlaying) stopAutoPlay(); else startAutoPlay();
     });
+    settingsButtonEl.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay();
+        updateSettingsButtonsState();
+        settingsModalEl.style.display = 'block';
+    });
+    closeSettingsModalButtonEl.addEventListener('click', () => {
+        settingsModalEl.style.display = 'none';
+    });
+    shuffleCardsButtonEl.addEventListener('click', () => {
+        if (wordData.length > 0) {
+            shuffleArray(wordData);
+            currentCardIndex = 0;
+            hiraganaVisible = false;
+            meaningVisible = false;
+            isShuffled = true;
+            displayCard();
+            if(typeof alert !== 'undefined') alert("카드 순서를 섞었습니다!");
+            updateSettingsButtonsState();
+        }
+        settingsModalEl.style.display = 'none';
+    });
+    resetCardOrderButtonEl.addEventListener('click', () => {
+        if (wordData.length > 0 && originalWordData.length > 0) {
+            wordData = [...originalWordData];
+            currentCardIndex = 0;
+            hiraganaVisible = false;
+            meaningVisible = false;
+            isShuffled = false;
+            displayCard();
+            if(typeof alert !== 'undefined') alert("카드 순서를 원래대로 되돌렸습니다.");
+            updateSettingsButtonsState();
+        }
+        settingsModalEl.style.display = 'none';
+    });
+    openAllWordsListFromSettingsButtonEl.addEventListener('click', () => {
+        settingsModalEl.style.display = 'none';
+        if (wordData.length === 0) return;
+        allWordsListEl.innerHTML = '';
+        const currentDataToDisplay = isShuffled ? wordData : originalWordData;
+        currentDataToDisplay.forEach((item) => {
+            const originalIndex = originalWordData.findIndex(origItem => origItem.id === item.id);
+
+            const listItem = document.createElement('div');
+            listItem.classList.add('p-2', 'rounded-md', 'cursor-pointer', 'hover:bg-gray-100', 'flex', 'justify-between', 'items-center', (memorizedStatus[item.id] ? 'memorized-item' : 'not-memorized-item'));
+            const wordInfoSpan = document.createElement('span');
+            wordInfoSpan.innerHTML = `<span class="word-display">${item.form}</span> <span class="reading-display">(${item.reading})</span>: <span class="meaning-display">${item.meaning}</span>`;
+            wordInfoSpan.classList.add('text-sm', 'sm:text-base');
+            const statusSpan = document.createElement('span');
+            statusSpan.textContent = memorizedStatus[item.id] ? '✅' : '❌';
+            statusSpan.classList.add('text-xs', 'sm:text-sm', 'ml-2', 'font-semibold', (memorizedStatus[item.id] ? 'text-green-600' : 'text-red-500'));
+            listItem.appendChild(wordInfoSpan);
+            listItem.appendChild(statusSpan);
+            listItem.addEventListener('click', () => {
+                currentCardIndex = wordData.findIndex(wd => wd.id === item.id);
+                if (currentCardIndex === -1 && originalWordData.length > 0) {
+                    currentCardIndex = originalWordData.findIndex(wd => wd.id === item.id);
+                }
+                hiraganaVisible = false;
+                meaningVisible = false;
+                displayCard();
+                allWordsModalEl.style.display = 'none';
+            });
+            allWordsListEl.appendChild(listItem);
+        });
+        allWordsModalEl.style.display = 'block';
+    });
+    switchModeInSettingsButtonEl.addEventListener('click', toggleAppMode);
+
     revealHiraganaButton.addEventListener('click', () => {
         if (isAutoPlaying) stopAutoPlay();
         toggleHiragana();
@@ -857,47 +1016,22 @@
         updateMemorizedButton();
         saveMemorizedStatus();
     });
-    showAllButtonEl.addEventListener('click', () => {
-        if (isAutoPlaying) stopAutoPlay();
-        if (wordData.length === 0) return;
-        allWordsListEl.innerHTML = '';
-        wordData.forEach((item, index) => {
-            const listItem = document.createElement('div');
-            listItem.classList.add('p-2', 'rounded-md', 'cursor-pointer', 'hover:bg-gray-100', 'flex', 'justify-between', 'items-center', (memorizedStatus[item.id] ? 'memorized-item' : 'not-memorized-item'));
-            const wordInfoSpan = document.createElement('span');
-            wordInfoSpan.innerHTML = `<span class="word-display">${item.form}</span> <span class="reading-display">(${item.reading})</span>: <span class="meaning-display">${item.meaning}</span>`;
-            wordInfoSpan.classList.add('text-sm', 'sm:text-base');
-            const statusSpan = document.createElement('span');
-            statusSpan.textContent = memorizedStatus[item.id] ? '✅' : '❌';
-            statusSpan.classList.add('text-xs', 'sm:text-sm', 'ml-2', 'font-semibold', (memorizedStatus[item.id] ? 'text-green-600' : 'text-red-500'));
-            listItem.appendChild(wordInfoSpan);
-            listItem.appendChild(statusSpan);
-            listItem.addEventListener('click', () => {
-                currentCardIndex = index;
-                hiraganaVisible = false;
-                meaningVisible = false;
-                displayCard();
-                modalEl.style.display = 'none';
-            });
-            allWordsListEl.appendChild(listItem);
-        });
-        modalEl.style.display = 'block';
+
+    closeAllWordsModalButtonEl.addEventListener('click', () => { allWordsModalEl.style.display = 'none'; });
+    window.addEventListener('click', (event) => {
+        if (event.target == allWordsModalEl) allWordsModalEl.style.display = 'none';
+        if (event.target == settingsModalEl) settingsModalEl.style.display = 'none';
     });
-    closeModalButtonEl.addEventListener('click', () => { modalEl.style.display = 'none'; });
-    window.addEventListener('click', (event) => { if (event.target == modalEl) modalEl.style.display = 'none'; });
     quitTestButtonEl.addEventListener('click', endTestMode);
     nextTestItemButtonEl.addEventListener('click', () => {
         currentTestItemIndex++;
         loadTestItem();
     });
-    switchModeButtonEl.addEventListener('click', () => {
-        if (isTestMode) endTestMode(); else startTestMode();
-    });
 
     function initializeApp() {
         parseWordData();
         loadMemorizedStatus();
-        const buttonsToDisable = [playPauseButtonEl, revealHiraganaButton, revealMeaningButton, prevButton, nextButton, switchModeButtonEl, showAllButtonEl, toggleMemorizedButtonEl];
+        const buttonsToDisable = [playPauseButtonEl, settingsButtonEl, revealHiraganaButton, revealMeaningButton, prevButton, nextButton, toggleMemorizedButtonEl, shuffleCardsButtonEl, openAllWordsListFromSettingsButtonEl, switchModeInSettingsButtonEl, resetCardOrderButtonEl];
 
         if (wordData.length > 0) {
             hiraganaVisible = false;
@@ -913,9 +1047,10 @@
         }
         learningModeContainerEl.classList.remove('hidden');
         testModeContainerEl.classList.add('hidden');
-        if (switchModeButtonEl.innerHTML.includes('학습/테스트 모드')) { // 초기 상태일 때만 설정
-            switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
-        }
+        appTopBarEl.classList.remove('hidden');
+        switchModeInSettingsButtonEl.innerHTML = '<i class="fas fa-vial"></i> 학습/테스트 모드 전환';
+        updateSettingsButtonsState();
+
     }
 
     initializeApp();
