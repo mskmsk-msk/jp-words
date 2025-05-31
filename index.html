@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일본어 단어 학습</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .content-hidden {
+            visibility: hidden;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            transition: visibility 0s 0.3s, opacity 0.3s ease-out, height 0.3s ease-out;
+        }
+        .content-visible {
+            visibility: visible;
+            opacity: 1;
+            height: auto; /* Adjusted for dynamic content */
+            transition: opacity 0.3s ease-in, height 0.3s ease-in;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 0.5rem;
+            max-height: 80vh;
+            overflow-y: scroll;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .memorized-item {
+            background-color: #E0F2FE; /* Light blue for memorized */
+        }
+        .not-memorized-item {
+            background-color: #FEF3C7; /* Light yellow for not memorized */
+        }
+        .hidden {
+            display: none;
+        }
+        .choice-button {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .choice-button.correct {
+            background-color: #34D399 !important; /* Tailwind green-400 */
+            border-color: #34D399 !important;
+            color: white !important;
+        }
+        .choice-button.incorrect {
+            background-color: #F87171 !important; /* Tailwind red-400 */
+            border-color: #F87171 !important;
+            color: white !important;
+        }
+        .choice-button.selected-incorrect {
+            background-color: #F87171 !important;
+            border-color: #F87171 !important;
+            color: white !important;
+        }
+        .choice-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .word-display {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .reading-display {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .meaning-display {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-400 via-cyan-500 to-blue-600 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-cyan-300 selection:text-cyan-900">
+
+<div id="learningModeContainer" class="flex justify-center w-full">
+    <div class="bg-white shadow-2xl rounded-xl p-4 sm:p-6 w-full sm:w-[672px] card transform transition-all duration-500 ease-in-out">
+        <div>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-700 mb-4 sm:mb-6">일본어 단어 학습</h1>
+
+            <div class="flex justify-between items-center mb-2">
+                <div id="wordIdEl" class="text-xs sm:text-sm text-gray-500 w-1/4"></div>
+                <button id="toggleMemorizedButton" class="text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none w-auto">
+                </button>
+            </div>
+
+            <div id="wordDisplayContainer" class="w-full text-center mb-3 sm:mb-4 p-3 sm:p-4 bg-cyan-50 rounded-lg">
+                <div id="wordFormEl" class="word-display text-2xl sm:text-3xl md:text-4xl font-semibold text-cyan-700"></div>
+                <div id="wordReadingEl" class="reading-display text-lg sm:text-xl md:text-2xl text-cyan-600 mt-1"></div>
+            </div>
+
+            <div id="detailsContainer">
+                <div id="meaningContainer" class="content-hidden">
+                    <h2 class="text-base sm:text-lg md:text-xl font-semibold text-blue-700 mt-3 sm:mt-4 mb-1 sm:mb-2">뜻:</h2>
+                    <p id="wordMeaningEl" class="meaning-display text-gray-700 bg-blue-50 p-2 sm:p-3 rounded-md text-sm sm:text-base md:text-lg"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 sm:mt-8 space-y-3">
+            <div class="flex items-center gap-x-3">
+                <button id="showAllButton" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center justify-center">
+                    <i class="fas fa-list-ul mr-1.5"></i> 전체 단어
+                </button>
+                <button id="playPauseButton" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg shadow-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center justify-center">
+                    <i class="fas fa-play mr-1.5"></i> 자동 재생
+                </button>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:gap-x-3 items-stretch space-y-3 sm:space-y-0">
+                <button id="revealButton" class="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 flex items-center justify-center">
+                    뜻 보기
+                </button>
+                <div class="w-full sm:flex-1 flex gap-x-3">
+                    <button id="prevButton" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        이전
+                    </button>
+                    <button id="nextButton" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 sm:py-3 px-5 sm:px-6 rounded-lg shadow-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        다음
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="testModeContainer" class="hidden bg-white shadow-2xl rounded-xl p-4 sm:p-6 w-full max-w-2xl card transform transition-all duration-500 ease-in-out">
+    <div>
+        <h2 class="text-xl sm:text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500 mb-4 sm:mb-6">단어 학습 (4지선다)</h2>
+        <div id="testProgressEl" class="text-sm text-gray-600 mb-2 text-center"></div>
+        <div id="testWordFormEl" class="w-full text-lg sm:text-xl md:text-2xl font-semibold text-teal-700 mb-1 p-3 sm:p-4 bg-teal-50 rounded-lg text-center word-display"></div>
+        <div id="testWordReadingEl" class="w-full text-base sm:text-lg md:text-xl text-teal-600 mb-3 sm:mb-4 text-center reading-display"></div>
+        <div id="testChoicesEl" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        </div>
+        <div id="testResultEl" class="text-center font-semibold mb-4 p-2 rounded-md h-10 meaning-display">
+        </div>
+    </div>
+    <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+        <button id="quitTestButton" class="w-full sm:w-1/3 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
+            학습 종료
+        </button>
+        <button id="nextTestItemButton" class="w-full sm:w-1/3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400" disabled>
+            다음 문제
+        </button>
+    </div>
+</div>
+
+<div class="mt-4 w-full max-w-2xl flex justify-center">
+    <button id="switchModeButton" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md text-base focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        <i class="fas fa-vial mr-1"></i> 학습/테스트 모드
+    </button>
+</div>
+
+<div id="allWordsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="closeModalButton">&times;</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-center text-indigo-600 mb-4">전체 단어 목록</h2>
+        <div id="allWordsListEl" class="space-y-2">
+        </div>
+    </div>
+</div>
+
+<script>
+    const rawWordData = `
+間	あいだ, 사이
+会う	あう, 만나다
+青い	あおい, 파랗다
+明るい	あかるい, 밝다
+赤い	あかい, 빨갛다
+秋	あき, 가을
+空く	あく, 비다
+開く	あく, 열리다
+開ける	あける, 열다
+足	あし, 발
+朝	あさ, 아침
+新しい	あたらしい, 새롭다
+暑い	あつい, 덥다
+暑さ	あつさ, 더위
+集まる	あつまる, 모이다
+兄	あに, 형/오빠
+姉	あね, 언니/누나
+安心	あんしん, 안심
+洗う	あらう, 씻다
+歩く	あるく, 걷다
+言う	いう, 말하다
+以下	いか, 이하
+以外	いがい, 이외
+意見	いけん, 의견
+医者	いしゃ, 의사
+以上	いじょう, 이상
+一度	いちど, 한 번
+一週間	いっしゅうかん, 일주일
+以内	いない, 이내
+池	いけ, 연못
+石	いし, 돌
+急ぐ	いそぐ, 서두르다
+糸	いと, 실
+田舎	いなか, 시골
+犬	いぬ, 개
+入口	いりぐち, 입구
+色	いろ, 색깔
+妹	いもうと, 여동생
+生まれる	うまれる, 태어나다
+歌	うた, 노래
+歌う	うたう, 노래를 부르다
+写す	うつす, 베끼다, 찍다
+海	うみ, 바다
+売る	うる, 팔다
+売れる	うれる, 팔리다, 팔 수 있다
+動く	うごく, 움직이다
+動きだす	うごきだす, 움직이기 시작하다
+運転	うんてん, 운전
+運動	うんどう, 운동
+映画	えいが, 영화
+映画館	えいがかん, 영화관
+英語	えいご, 영어
+駅	えき, 역
+駅員	えきいん, 역무원
+描く	えがく, 그리다
+営業	えいぎょう, 영업
+多い	おおい, 많다
+大きさ	おおきさ, 크기
+起きる	おきる, 일어나다
+屋上	おくじょう, 옥상
+送る	おくる, 보내다
+行う	おこなう, 행하다
+教える	おしえる, 가르치다
+押す	おす, 누르다, 밀다
+お正月	おしょうがつ, 양력설
+音	おと, 소리
+弟	おとうと, 남동생
+おもちゃ	おもちゃ, 장난감
+お茶	おちゃ, 차
+お兄さん	おにいさん, 오빠
+お姉さん	おねえさん, 언니, 누나
+同じだ	おなじだ, 같다
+重い	おもい, 무겁다
+思い出す	おもいだす, 생각나다, 떠올리다
+思う	おもう, 생각하다
+泳ぐ	およぐ, 헤엄치다
+終わる	おわる, 끝나다
+音楽	おんがく, 음악
+親指	おやゆび, 엄지손가락
+会社	かいしゃ, 회사
+会話	かいわ, 회화
+会場	かいじょう, 회장
+買う	かう, 사다
+帰り	かえり, 돌아옴
+帰る	かえる, 돌아가다
+顔	かお, 얼굴
+火事	かじ, 화재
+書き方	かきかた, 쓰는 법
+数える	かぞえる, 세다
+風	かぜ, 바람
+貸す	かす, 빌려주다
+家族	かぞく, 가족
+片付ける	かたづける, 정리하다
+方	かた, 분
+体	からだ, 몸
+借りる	かりる, 빌리다
+軽い	かるい, 가볍다
+川	かわ, 강
+代わり	かわり, 대신
+考える	かんがえる, 생각하다
+考え方	かんがえかた, 생각하는 방식
+漢字	かんじ, 한자
+気分	きぶん, 기분
+着物	きもの, 일본 옷
+教	きょう, 오늘
+教室	きょうしつ, 교실
+近所	きんじょ, 근처
+銀行	ぎんこう, 은행
+銀色	ぎんいろ, 은색
+空気	くうき, 공기
+空港	くうこう, 공항
+首	くび, 목
+雲	くも, 구름
+黒い	くろい, 검다
+薬	くすり, 약
+区	く, 구
+経験	けいけん, 경험
+計画	けいかく, 계획
+研究	けんきゅう, 연구
+研究会	けんきゅうかい, 연구회
+県	けん, 현
+公園	こうえん, 공원
+工事	こうじ, 공사
+工場	こうじょう, 공장
+工業	こうぎょう, 공업
+氷	こおり, 얼음
+声	こえ, 목소리
+心	こころ, 마음
+答える	こたえる, 대답하다
+小鳥	ことり, 작은 새
+今年	ことし, 올해
+今度	こんど, 이번, 다음
+米	こめ, 쌀
+作文	さくぶん, 작문
+産業	さんぎょう, 산업
+寒い	さむい, 춥다
+皿	さら, 접시
+仕事	しごと, 일
+時代	じだい, 시대
+自転車	じてんしゃ, 자전거
+自分	じぶん, 자신
+辞書	じしょ, 사전
+市民	しみん, 시민
+死ぬ	しぬ, 죽다
+質問	しつもん, 질문
+品物	しなもの, 물건
+写真	しゃしん, 사진
+写真家	しゃしんか, 사진작가
+社長	しゃちょう, 사장
+十分	じゅうぶん, 충분
+出口	でぐち, 출구
+出発	しゅっぱつ, 출발
+主人	しゅじん, 주인
+住所	じゅうしょ, 주소
+授業	じゅぎょう, 수업
+食事	しょくじ, 식사
+食堂	しょくどう, 식당
+食料品	しょくりょうひん, 식료품
+調べる	しらべる, 조사하다
+知る	しる, 알다
+白い	しろい, 하얗다
+進む	すすむ, 나아가다, 진행되다
+好きだ	すきだ, 좋아하다
+少し	すこし, 조금
+住む	すむ, 살다
+水道	すいどう, 수도
+世界	せかい, 세계
+生産	せいさん, 생산
+西洋	せいよう, 서양
+説明	せつめい, 설명
+世話	せわ, 보살핌, 도와줌
+席	せき, 자리
+祖母	そぼ, 조모, 할머니
+空	そら, 하늘
+大使	たいし, 대사
+大使館	たいしかん, 대사관
+大切だ	たいせつだ, 소중하다
+台所	だいどころ, 부엌
+台風	たいふう, 태풍
+正しい	ただしい, 바르다, 옳다
+立つ	たつ, 서다
+建物	たてもの, 건물
+楽しい	たのしい, 즐겁다
+足りない	たりない, 부족하다
+足りる	たりる, 충분하다
+茶色	ちゃいろ, 갈색
+地下鉄	ちかてつ, 지하철
+力	ちから, 힘
+地図	ちず, 지도
+注意	ちゅうい, 주의
+中止	ちゅうし, 중지
+地理	ちり, 지리
+使う	つかう, 사용하다
+着く	つく, 도착하다
+机	つくえ, 책상
+作る	つくる, 만들다
+都合	つごう, 사정, 형편
+強い	つよい, 강하다
+手紙	てがみ, 편지
+店	みせ, 가게
+店員	てんいん, 점원
+電話代	でんわだい, 전화요금
+動物	どうぶつ, 동물
+～度	～ど, ~번
+特に	とくに, 특히
+特別だ	とくべつだ, 특별하다
+図書館	としょかん, 도서관
+止まる	とまる, 멈추다
+鳥	とり, 새
+遠い	とおい, 멀다
+遠く	とおく, 멀리
+通る	とおる, 지나가다
+土曜日	どようび, 토요일
+夏	なつ, 여름
+何枚	なんまい, 몇 매, 몇 장
+習う	ならう, 배우다
+日記	にっき, 일기
+二台	にだい, 2대, 두 대
+入院	にゅういん, 입원
+眠い	ねむい, 졸리다
+眠る	ねむる, 자다
+乗る	のる, 타다
+荷物	にもつ, 짐
+飲む	のむ, 마시다
+売店	ばいてん, 매점
+運ぶ	はこぶ, 운반하다, 옮기다
+始める	はじめる, 시작하다
+場所	ばしょ, 장소
+走る	はしる, 달리다
+働く	はたらく, 일하다
+発音	はつおん, 발음
+花	はな, 꽃
+春	はる, 봄
+早く	はやく, 일찍, 빨리
+林	はやし, 숲
+光	ひかり, 빛
+光る	ひかる, 빛나다
+低い	ひくい, 낮다
+引く	ひく, 끌다, 찾다
+病院	びょういん, 병원
+昼	ひる, 낮
+昼ごはん	ひるごはん, 점심밥
+昼休み	ひるやすみ, 점심시간
+広い	ひろい, 넓다
+服	ふく, 옷
+不便だ	ふべんだ, 불편하다
+船	ふね, 배
+冬	ふゆ, 겨울
+古い	ふるい, 오래된, 낡다
+文	ぶん, 문장, 글
+文学	ぶんがく, 문학
+便利だ	べんりだ, 편리하다
+勉強	べんきょう, 공부
+本屋	ほんや, 서점
+毎朝	まいあさ, 매일 아침
+町	まち, 시내, 도시
+待つ	まつ, 기다리다
+間に合う	まにあう, 시간에 맞추다
+短い	みじかい, 짧다
+港	みなと, 항구
+村	むら, 마을
+目	め, 눈
+持つ	もつ, 들다, 가지다
+持てる	もてる, 들 수 있다
+森	もり, 숲
+問題	もんだい, 문제
+門	もん, 문
+野菜	やさい, 채소
+役	やく, 역할
+安い	やすい, 싸다
+山道	やまみち, 산길
+夕方	ゆうがた, 저녁때
+夕飯	ゆうはん, 저녁밥
+有名だ	ゆうめいだ, 유명하다
+雪	ゆき, 눈
+用事	ようじ, 볼일, 용무
+洋服	ようふく, 양복, 옷
+予習	よしゅう, 예습
+予定	よてい, 예정
+予報	よほう, 예보
+夜	よる, 밤
+弱い	よわい, 약하다
+来週	らいしゅう, 다음 주
+料理	りょうり, 요리
+旅行	りょこう, 여행
+旅館	りょかん, 여관
+利用	りよう, 이용
+別れる	わかれる, 헤어지다
+悪い	わるい, 나쁘다
+私	わたくし, 저
+`;
+
+    let wordData = [];
+
+    // --- 전역 변수 ---
+    let currentCardIndex = 0;
+    let detailsVisible = false; // 뜻 보기/숨기기 상태
+    let memorizedStatus = {};
+    let isAutoPlaying = false;
+    let speechQueue = [];
+    let currentSpeechUtteranceIndex = 0;
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let preferredKoreanVoice = null;
+    let preferredJapaneseVoice = null;
+
+    let isTestMode = false; // 학습(4지선다) 모드 상태
+    let currentTestItemIndex = 0;
+    let shuffledTestData = [];
+    let score = 0;
+    let totalQuestionsInTest = 0;
+
+    // --- DOM 요소 가져오기 ---
+    const learningModeContainerEl = document.getElementById('learningModeContainer');
+    const wordIdEl = document.getElementById('wordIdEl');
+    const wordFormEl = document.getElementById('wordFormEl');
+    const wordReadingEl = document.getElementById('wordReadingEl');
+    const wordMeaningEl = document.getElementById('wordMeaningEl');
+    const revealButton = document.getElementById('revealButton');
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const meaningContainerEl = document.getElementById('meaningContainer');
+    const toggleMemorizedButtonEl = document.getElementById('toggleMemorizedButton');
+    const showAllButtonEl = document.getElementById('showAllButton');
+    const playPauseButtonEl = document.getElementById('playPauseButton');
+
+    const testModeContainerEl = document.getElementById('testModeContainer');
+    const testProgressEl = document.getElementById('testProgressEl');
+    const testWordFormEl = document.getElementById('testWordFormEl');
+    const testWordReadingEl = document.getElementById('testWordReadingEl');
+    const testChoicesEl = document.getElementById('testChoicesEl');
+    const testResultEl = document.getElementById('testResultEl');
+    const quitTestButtonEl = document.getElementById('quitTestButton');
+    const nextTestItemButtonEl = document.getElementById('nextTestItemButton');
+
+    const switchModeButtonEl = document.getElementById('switchModeButton');
+    const modalEl = document.getElementById('allWordsModal');
+    const closeModalButtonEl = document.getElementById('closeModalButton');
+    const allWordsListEl = document.getElementById('allWordsListEl');
+
+
+    // --- 데이터 파싱 함수 ---
+    function parseWordData() {
+        const lines = rawWordData.trim().split('\n');
+        wordData = lines.map((line, index) => {
+            const parts = line.split('\t');
+            const form = parts[0].trim();
+            const readingAndMeaning = parts[1].split(',');
+            const reading = readingAndMeaning[0].trim();
+            const meaning = readingAndMeaning.slice(1).join(',').trim(); // 뜻에 쉼표가 있을 경우 대비
+            return { id: index + 1, form, reading, meaning };
+        });
+    }
+
+    // --- 음성 합성 관련 함수 ---
+    function getJapaneseNumberString(num) { return String(num); }
+
+    function loadVoices() {
+        voices = synth.getVoices();
+        const koreanVoicePreferences = ['Microsoft Heami Online (Natural) - Korean (Korea)', 'Google 한국의', '유나 (고품질)', '소라 (고품질)', '유나', '소라', 'Yuna (Enhanced)', 'Sora (Enhanced)', 'Yuna', 'Sora'];
+        for (const name of koreanVoicePreferences) {
+            const voice = voices.find(v => v.lang === 'ko-KR' && v.name === name);
+            if (voice) { preferredKoreanVoice = voice; break; }
+        }
+        if (!preferredKoreanVoice) preferredKoreanVoice = voices.find(v => v.lang === 'ko-KR' && (v.name.toLowerCase().includes('female') || v.name.includes('여성')));
+        if (!preferredKoreanVoice) preferredKoreanVoice = voices.find(v => v.lang === 'ko-KR');
+
+        const japaneseVoicePreferences = ['Google 日本語', 'Microsoft Ayumi Online (Natural) - Japanese (Japan)', 'Microsoft Haruka Online (Natural) - Japanese (Japan)', 'Microsoft Haruka Desktop - Japanese', 'Kyoko (Enhanced)', 'Otoya (Enhanced)', 'Kyoko', 'Otoya'];
+        for (const name of japaneseVoicePreferences) {
+            const voice = voices.find(v => v.lang === 'ja-JP' && v.name === name);
+            if (voice) { preferredJapaneseVoice = voice; break; }
+        }
+        if (!preferredJapaneseVoice) preferredJapaneseVoice = voices.find(v => v.lang === 'ja-JP' && (v.name.toLowerCase().includes('female') || v.name.includes('女性')));
+        if (!preferredJapaneseVoice) preferredJapaneseVoice = voices.find(v => v.lang === 'ja-JP');
+    }
+
+    if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = loadVoices;
+    }
+    loadVoices(); // 초기 로드
+
+    function speak(text, lang, callback) {
+        if (voices.length === 0) loadVoices();
+        if (synth.speaking) synth.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        let targetVoice = null;
+        if (lang === 'ko-KR') targetVoice = preferredKoreanVoice;
+        else if (lang === 'ja-JP') targetVoice = preferredJapaneseVoice;
+
+        if (targetVoice) utterance.voice = targetVoice;
+        else {
+            const fallbackVoice = voices.find(v => v.lang === lang);
+            if (fallbackVoice) utterance.voice = fallbackVoice;
+        }
+        utterance.onend = () => { if (callback) callback(); };
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesisUtterance.onerror:', event.error, event);
+            if (isAutoPlaying && event.error !== 'canceled') {
+                alert(`음성 재생 중 오류: ${event.error || 'N/A'}. 자동 재생 중지.`);
+                stopAutoPlay();
+            }
+            if (callback) callback();
+        };
+        synth.speak(utterance);
+    }
+
+    function cleanTextForSpeech(text) { // 문법 앱에서 가져왔지만, 단어 뜻에는 특수문자가 거의 없을 것이므로 단순화 가능
+        return text.replace(/\([^)]*\)/g, '').trim();
+    }
+
+    // --- 낱말카드 모드 함수 ---
+    function playCurrentCardAudio() {
+        if (!isAutoPlaying) return;
+        const card = wordData[currentCardIndex];
+        if (memorizedStatus[card.id]) { playNextCard(); return; }
+
+        speechQueue = [];
+        currentSpeechUtteranceIndex = 0;
+
+        // 단어 표기 (한자 등) 읽기 - 한자만 있을 경우, 또는 히라가나/가타카나와 섞여있을 때 발음과 다를 수 있음.
+        // 여기서는 reading을 우선적으로 읽어주는 것이 자연스러움. form은 시각 정보로.
+        // speechQueue.push({ text: card.form, lang: 'ja-JP' });
+        speechQueue.push({ text: card.reading, lang: 'ja-JP' }); // 발음
+        speechQueue.push({ text: cleanTextForSpeech(card.meaning), lang: 'ko-KR' }); // 뜻
+
+        playNextSpeechInQueue();
+    }
+
+    function playNextSpeechInQueue() {
+        if (!isAutoPlaying || currentSpeechUtteranceIndex >= speechQueue.length) {
+            if (isAutoPlaying) { setTimeout(playNextCard, 700); }
+            return;
+        }
+        const speechItem = speechQueue[currentSpeechUtteranceIndex];
+        speak(speechItem.text, speechItem.lang, () => {
+            currentSpeechUtteranceIndex++;
+            playNextSpeechInQueue();
+        });
+    }
+
+    function playNextCard() {
+        if (!isAutoPlaying) return;
+        currentCardIndex = (currentCardIndex + 1);
+        if (currentCardIndex >= wordData.length) {
+            stopAutoPlay();
+            alert("모든 단어 학습을 완료했습니다!");
+            return;
+        }
+        displayCard();
+        if (isAutoPlaying) { // 자동 재생 시 뜻 항상 표시 (이전 요청 반영)
+            if (detailsVisible === false) showDetails();
+        }
+        playCurrentCardAudio();
+    }
+
+    function startAutoPlay() {
+        if (isTestMode) return;
+        if (synth.speaking) synth.cancel();
+        isAutoPlaying = true;
+        playPauseButtonEl.innerHTML = '<i class="fas fa-pause mr-1"></i> 일시 정지';
+        currentSpeechUtteranceIndex = 0;
+        if (detailsVisible === false) showDetails(); // 자동 재생 시작 시 뜻 표시
+        playCurrentCardAudio();
+    }
+
+    function stopAutoPlay() {
+        isAutoPlaying = false;
+        synth.cancel();
+        speechQueue = [];
+        currentSpeechUtteranceIndex = 0;
+        playPauseButtonEl.innerHTML = '<i class="fas fa-play mr-1"></i> 자동 재생';
+    }
+
+    function loadMemorizedStatus() {
+        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus');
+        if (storedStatus) { memorizedStatus = JSON.parse(storedStatus); }
+    }
+    function saveMemorizedStatus() {
+        localStorage.setItem('japaneseWordMemorizedStatus', JSON.stringify(memorizedStatus));
+    }
+    function updateMemorizedButton() {
+        const card = wordData[currentCardIndex];
+        if (memorizedStatus[card.id]) {
+            toggleMemorizedButtonEl.textContent = '암기 ✅';
+            toggleMemorizedButtonEl.className = 'text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none bg-green-200 hover:bg-green-300 text-green-700';
+        } else {
+            toggleMemorizedButtonEl.textContent = '암기 ❌';
+            toggleMemorizedButtonEl.className = 'text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none bg-gray-200 hover:bg-gray-300 text-gray-700';
+        }
+    }
+
+    function displayCard() {
+        if (wordData.length === 0) return;
+        const card = wordData[currentCardIndex];
+        wordIdEl.textContent = `ID: ${String(card.id).padStart(3, '0')}`;
+        wordFormEl.textContent = card.form;
+        wordReadingEl.textContent = card.reading;
+        wordMeaningEl.textContent = card.meaning;
+
+        // 예문 클릭 음성 재생 기능은 단어장이므로 제거. 대신 단어/뜻 클릭 시 재생 가능하도록 수정
+        wordFormEl.onclick = () => speak(card.reading, 'ja-JP'); // 표기 클릭 시 발음 읽기
+        wordReadingEl.onclick = () => speak(card.reading, 'ja-JP'); // 발음 클릭 시 발음 읽기
+        wordMeaningEl.onclick = () => speak(card.meaning, 'ko-KR'); // 뜻 클릭 시 뜻 읽기
+
+        if (!detailsVisible) hideDetails(); // 자동재생이 아닌 일반 넘기기 시에는 상태 유지
+        updateMemorizedButton();
+    }
+
+    function hideDetails() { // 뜻 숨기기
+        meaningContainerEl.classList.remove('content-visible');
+        meaningContainerEl.classList.add('content-hidden');
+        detailsVisible = false;
+        revealButton.textContent = '뜻 보기';
+    }
+
+    function showDetails() { // 뜻 보기
+        meaningContainerEl.classList.remove('content-hidden');
+        meaningContainerEl.classList.add('content-visible');
+        detailsVisible = true;
+        revealButton.textContent = '숨기기';
+    }
+
+    // --- 학습/테스트 모드 함수 ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function generateChoices(correctMeaning, allWordData) {
+        const choices = [correctMeaning];
+        // 모든 단어의 뜻 목록 (중복 제거)
+        let otherMeanings = [...new Set(allWordData.map(item => item.meaning))].filter(m => m !== correctMeaning);
+        shuffleArray(otherMeanings);
+
+        for (let i = 0; i < 3 && i < otherMeanings.length; i++) { // 최대 3개의 오답 추가
+            choices.push(otherMeanings[i]);
+        }
+        // 선택지가 4개 미만이면 더 채워넣으려고 시도 (데이터가 적을 경우)
+        let attempts = 0;
+        while (choices.length < 4 && otherMeanings.length > (choices.length -1) && attempts < 10) {
+            const nextOption = otherMeanings[choices.length -1 + attempts]; // 이미 사용된 오답 다음 것부터 시도
+            if (nextOption && !choices.includes(nextOption)) {
+                choices.push(nextOption);
+            }
+            attempts++;
+        }
+        // 만약 데이터 부족으로 4개가 안되면 있는 만큼만 사용
+        return shuffleArray(choices);
+    }
+
+    function loadTestItem() {
+        if (currentTestItemIndex >= totalQuestionsInTest) {
+            testResultEl.textContent = `학습 종료! 최종 점수: ${score} / ${totalQuestionsInTest}`;
+            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-blue-100 text-blue-700 h-10 meaning-display';
+            testWordFormEl.textContent = "모든 문제를 다 풀었습니다!";
+            testWordReadingEl.textContent = "";
+            testChoicesEl.innerHTML = '';
+            nextTestItemButtonEl.disabled = true;
+            quitTestButtonEl.textContent = "낱말카드로";
+            return;
+        }
+
+        const item = shuffledTestData[currentTestItemIndex];
+        testProgressEl.textContent = `문제 ${currentTestItemIndex + 1} / ${totalQuestionsInTest} (ID: ${String(item.id).padStart(3, '0')})`;
+        testWordFormEl.textContent = item.form;
+        testWordReadingEl.textContent = item.reading;
+        testResultEl.textContent = '';
+        testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md h-10 meaning-display';
+        testChoicesEl.innerHTML = '';
+
+        const choices = generateChoices(item.meaning, wordData);
+        if (choices.length < 2) { // 최소 2개의 선택지는 있어야 함 (정답 포함)
+            testChoicesEl.innerHTML = '<p class="text-red-500 text-center">보기를 생성하기에 데이터가 부족합니다.</p>';
+            nextTestItemButtonEl.disabled = false; // 다음으로 넘어가게는 해줌
+            return;
+        }
+
+        choices.forEach(choiceText => {
+            const choiceButton = document.createElement('button');
+            choiceButton.textContent = choiceText;
+            choiceButton.classList.add('choice-button', 'p-3', 'rounded-md', 'border', 'border-gray-300', 'hover:bg-indigo-100', 'focus:outline-none', 'focus:ring-2', 'focus:ring-indigo-400', 'text-sm', 'sm:text-base', 'meaning-display');
+            choiceButton.addEventListener('click', () => handleChoiceSelection(choiceButton, choiceText, item.meaning));
+            testChoicesEl.appendChild(choiceButton);
+        });
+        nextTestItemButtonEl.disabled = true;
+    }
+
+    function handleChoiceSelection(selectedButton, selectedMeaning, correctMeaning) {
+        const buttons = testChoicesEl.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.disabled = true;
+            button.classList.remove('hover:bg-indigo-100');
+            if (button.textContent === correctMeaning) {
+                button.classList.add('correct');
+            } else if (button === selectedButton && selectedMeaning !== correctMeaning) {
+                button.classList.add('selected-incorrect');
+            } else if (button.textContent !== correctMeaning) { // 선택하지 않은 오답
+                button.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-300', 'opacity-50');
+            }
+        });
+
+        if (selectedMeaning === correctMeaning) {
+            testResultEl.textContent = '정답입니다!';
+            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-green-100 text-green-700 h-10 meaning-display';
+            score++;
+        } else {
+            testResultEl.textContent = `오답입니다. 정답: ${correctMeaning}`;
+            testResultEl.className = 'text-center font-semibold mb-4 p-2 rounded-md bg-red-100 text-red-700 h-10 meaning-display';
+        }
+        nextTestItemButtonEl.disabled = false;
+        nextTestItemButtonEl.focus();
+    }
+
+    function startTestMode() {
+        isTestMode = true;
+        if (isAutoPlaying) stopAutoPlay();
+
+        learningModeContainerEl.classList.add('hidden');
+        testModeContainerEl.classList.remove('hidden');
+        switchModeButtonEl.innerHTML = '<i class="fas fa-book-open mr-1"></i> 낱말카드 모드';
+        switchModeButtonEl.setAttribute('aria-label', '낱말카드 모드로 전환');
+
+
+        shuffledTestData = shuffleArray([...wordData]); // 전체 단어 사용
+        currentTestItemIndex = 0;
+        score = 0;
+        totalQuestionsInTest = shuffledTestData.length;
+
+        nextTestItemButtonEl.disabled = true;
+        quitTestButtonEl.textContent = "학습 종료";
+        testResultEl.textContent = '';
+        loadTestItem();
+    }
+
+    function endTestMode() {
+        isTestMode = false;
+        learningModeContainerEl.classList.remove('hidden');
+        testModeContainerEl.classList.add('hidden');
+        switchModeButtonEl.innerHTML = '<i class="fas fa-vial mr-1"></i> 학습/테스트 모드';
+        switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
+
+
+        if (wordData.length > 0) displayCard();
+    }
+
+    // --- 이벤트 리스너 ---
+    playPauseButtonEl.addEventListener('click', () => {
+        if (isTestMode) return;
+        if (isAutoPlaying) stopAutoPlay(); else startAutoPlay();
+    });
+    revealButton.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay(); // 자동 재생 중 뜻 보기 누르면 일단 자동재생 멈춤
+        if (detailsVisible) hideDetails(); else showDetails();
+    });
+    prevButton.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay();
+        currentCardIndex = (currentCardIndex - 1 + wordData.length) % wordData.length;
+        displayCard();
+    });
+    nextButton.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay();
+        currentCardIndex = (currentCardIndex + 1) % wordData.length;
+        displayCard();
+    });
+    toggleMemorizedButtonEl.addEventListener('click', () => {
+        const card = wordData[currentCardIndex];
+        memorizedStatus[card.id] = !memorizedStatus[card.id];
+        updateMemorizedButton();
+        saveMemorizedStatus();
+    });
+    showAllButtonEl.addEventListener('click', () => {
+        if (isAutoPlaying) stopAutoPlay();
+        allWordsListEl.innerHTML = '';
+        wordData.forEach((item, index) => {
+            const listItem = document.createElement('div');
+            listItem.classList.add('p-2', 'rounded-md', 'cursor-pointer', 'hover:bg-gray-100', 'flex', 'justify-between', 'items-center', (memorizedStatus[item.id] ? 'memorized-item' : 'not-memorized-item'));
+
+            const wordInfoSpan = document.createElement('span');
+            wordInfoSpan.innerHTML = `<span class="word-display">${item.form}</span> <span class="reading-display">(${item.reading})</span>: <span class="meaning-display">${item.meaning}</span>`;
+            wordInfoSpan.classList.add('text-sm', 'sm:text-base');
+
+            const statusSpan = document.createElement('span');
+            statusSpan.textContent = memorizedStatus[item.id] ? '✅' : '❌';
+            statusSpan.classList.add('text-xs', 'sm:text-sm', 'ml-2', 'font-semibold', (memorizedStatus[item.id] ? 'text-green-600' : 'text-red-500'));
+
+            listItem.appendChild(wordInfoSpan);
+            listItem.appendChild(statusSpan);
+
+            listItem.addEventListener('click', () => {
+                currentCardIndex = index;
+                displayCard();
+                modalEl.style.display = 'none';
+            });
+            allWordsListEl.appendChild(listItem);
+        });
+        modalEl.style.display = 'block';
+    });
+    closeModalButtonEl.addEventListener('click', () => { modalEl.style.display = 'none'; });
+    window.addEventListener('click', (event) => { if (event.target == modalEl) modalEl.style.display = 'none'; });
+
+    quitTestButtonEl.addEventListener('click', endTestMode);
+    nextTestItemButtonEl.addEventListener('click', () => {
+        currentTestItemIndex++;
+        loadTestItem();
+    });
+
+    switchModeButtonEl.addEventListener('click', () => {
+        if (isTestMode) {
+            endTestMode();
+        } else {
+            startTestMode();
+        }
+    });
+
+    // --- 앱 초기화 ---
+    function initializeApp() {
+        parseWordData(); // 단어 데이터 파싱
+        loadMemorizedStatus();
+        if (wordData.length > 0) {
+            displayCard();
+        } else {
+            wordFormEl.textContent = "단어 데이터가 없습니다.";
+            meaningContainerEl.classList.add('content-hidden');
+            // 버튼 비활성화 등 처리
+            showAllButtonEl.disabled = true;
+            playPauseButtonEl.disabled = true;
+            revealButton.disabled = true;
+            prevButton.disabled = true;
+            nextButton.disabled = true;
+            switchModeButtonEl.disabled = true;
+        }
+        learningModeContainerEl.classList.remove('hidden');
+        testModeContainerEl.classList.add('hidden');
+        switchModeButtonEl.innerHTML = '<i class="fas fa-vial mr-1"></i> 학습/테스트 모드';
+        switchModeButtonEl.setAttribute('aria-label', '학습/테스트 모드로 전환');
+
+    }
+
+    initializeApp();
+</script>
+
+</body>
+</html>
