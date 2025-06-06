@@ -137,6 +137,22 @@
         .app-info p:last-child {
             margin-bottom: 1.5rem; /* mb-6, for spacing before buttons */
         }
+        .part-select-button {
+            background-color: #f3f4f6; /* bg-gray-100 */
+            border-color: #d1d5db; /* border-gray-300 */
+            color: #374151; /* text-gray-700 */
+            transition: all 0.2s ease-in-out;
+        }
+        .part-select-button:hover {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+        }
+        .part-select-button.active {
+            background-color: #43A047; /* green-600 */
+            color: white;
+            border-color: #43A047;
+            font-weight: 700;
+        }
+
     </style>
 </head>
 <body class="bg-gradient-to-br from-green-400 via-cyan-500 to-blue-600 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-cyan-300 selection:text-cyan-900">
@@ -231,7 +247,15 @@
         <div class="app-info text-center mb-6">
             <p class="font-semibold text-lg text-gray-700">일본어 단어 학습</p>
             <p>제작자: 강민수</p>
-            <p>버전: 1.0.1</p>
+            <p>버전: 1.0.2</p>
+        </div>
+        <div class="border-t border-gray-200 my-4"></div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2 text-center">학습 파트 선택</h3>
+        <div id="partSelectionContainer" class="flex flex-wrap justify-center gap-2 mb-4">
+            <button data-part="part1" class="part-select-button px-3 py-2 text-sm font-semibold rounded-md border">기초 어휘</button>
+            <button data-part="part2" class="part-select-button px-3 py-2 text-sm font-semibold rounded-md border">기출 (16-24)</button>
+            <button data-part="part3" class="part-select-button px-3 py-2 text-sm font-semibold rounded-md border">기출 (00-15)</button>
+            <button data-part="part4" class="part-select-button px-3 py-2 text-sm font-semibold rounded-md border">기출 (90-99)</button>
         </div>
 
         <button id="toggleKanjiEtymologyInSettingsButton" class="settings-modal-button">
@@ -243,6 +267,7 @@
         <button id="resetCardOrderButton" class="settings-modal-button" disabled>
             <i class="fas fa-undo"></i> 카드 순서 원래대로
         </button>
+
         <button id="openAllWordsListFromSettingsButton" class="settings-modal-button">
             <i class="fas fa-list-ul"></i> 전체 단어 목록 보기
         </button>
@@ -254,7 +279,9 @@
 
 
 <script>
-    const rawWordData = `
+
+    const allRawData = {
+        'part1': `
 間   あいだ, 사이
 会う  あう, 만나다
 青い  あおい, 파랗다
@@ -545,9 +572,292 @@
 別れる わかれる, 헤어지다
 悪い  わるい, 나쁘다
 私   わたくし, 저
-`;
+`,
+        'part2': `
+            浅い  あさい, 얕다
+            案内  あんない, 안내
+            意見  いけん, 의견
+            薄い  うすい, 얇다
+            打つ  うつ, 치다
+            覚える おぼえる, 외우다
+            お礼  おれい, 사례
+            硬い  かたい, 단단하다
+            片付ける かたづける, 치우다
+            決める きめる, 정하다
+            経験  けいけん, 경험
+            細かい こまかい, 잘다, 미세하다
+            怖い  こわい, 무섭다
+            探す  さがす, 찾다
+            寂しい さびしい, 외롭다
+            残念だ ざんねんだ, 유감이다
+            十分  じゅうぶん, 충분
+            将来  しょうらい, 장래
+            進む  すすむ, 나아가다
+            説明  せつめい, 설명
+            育てる そだてる, 키우다
+            大事だ だいじだ, 소중하다
+            足りない たりない, 부족하다
+            続く  つづく, 계속되다
+            手伝う てつだう, 돕다
+            届く  とどく, 도착하다
+            取り替える とりかえる, 교환하다
+            直る  なおる, 고쳐지다
+            苦い  にがい, 쓰다
+            残る  のこる, 남다
+            乗り換える のりかえる, 갈아타다
+            はさみ  はさみ, 가위
+            貼る  はる, 붙이다
+            深い  ふかい, 깊다
+            翻訳  ほんやく, 번역
+            負ける まける, 지다
+            メニュー  メニュー, 메뉴
+            約束  やくそく, 약속
+            喜ぶ  よろこぶ, 기뻐하다
+            理由  りゆう, 이유
+            留守  るす, 부재중
+            割れる われる, 깨지다
+            アンケート アンケート, 설문조사
+            安全だ あんぜんだ, 안전하다
+            以上  いじょう, 이상
+            受付  うけつけ, 접수
+            営業  えいぎょう, 영업
+            落とす おとす, 떨어뜨리다
+            お土産 おみやげ, 선물
+            折る  おる, 접다, 부러뜨리다
+            形   かたち, 모양
+            カッター  カッター, 커터
+            厳しい きびしい, 엄하다
+            急行  きゅうこう, 급행
+            比べる くらべる, 비교하다
+            結果  けっか, 결과
+            故障  こしょう, 고장
+            込む  こむ, 붐비다
+            誘う  さそう, 권유하다
+            叱る  しかる, 꾸짖다
+            自由に じゆうに, 자유롭게
+            種類  しゅるい, 종류
+            招待  しょうたい, 초대
+            心配  しんぱい, 걱정
+            過ぎる すぎる, 지나다
+            捨てる すてる, 버리다
+
+            ぜひ  ぜひ, 꼭
+            世話  せわ, 돌봄
+            戦争  せんそう, 전쟁
+            頼む  たのむ, 부탁하다
+            チェック  チェック, 체크
+            注意  ちゅうい, 주의
+            貯金  ちょきん, 저금
+            都合  つごう, 형편
+            問い合わせ といあわせ, 문의
+            とうとう とうとう, 드디어
+            泊まる とまる, 묵다
+            どんどん どんどん, 점점
+            慣れる なれる, 익숙해지다
+            値段  ねだん, 가격
+            願い  ねがい, 소원
+            喉   のど, 목
+            はっきり はっきり, 확실히
+            復習  ふくしゅう, 복습
+            必要だ ひつようだ, 필요하다
+            ポスター  ポスター, 포스터
+            見つかる みつかる, 발견되다
+            珍しい めずらしい, 드물다
+            夢   ゆめ, 꿈
+            予約  よやく, 예약
+            利用  りよう, 이용
+            冷房  れいぼう, 냉방
+            レンジ  レンジ, 레인지
+        `,
+        'part3': `
+            アルバイト  アルバイト, 아르바이트
+            案内  あんない, 안내
+            安全だ あんぜんだ, 안전하다
+            以下  いか, 이하
+            以上  いじょう, 이상
+            一見  いっけん, 한 번 봄
+            行ってまいります いってまいります, 다녀오겠습니다
+            植える うえる, 심다
+            打つ  うつ, 치다, 때리다
+            腕   うで, 팔
+            うるさい うるさい, 시끄럽다
+            お祝い おいわい, 축하(선물)
+            屋上  おくじょう, 옥상
+            遅れる おくれる, 늦다
+            お大事に おだいじに, 몸조리 잘 하세요
+            おつり おつり, 거스름돈
+            お土産 おみやげ, 선물
+            おもちゃ おもちゃ, 장난감
+            親   おや, 부모
+            折れる おれる, 부러지다
+            会場  かいじょう, 회장
+            鏡   かがみ, 거울
+            飾る  かざる, 장식하다
+            硬い  かたい, 딱딱하다
+            壁   かべ, 벽
+            構う  かまう, 상관하다
+            関係  かんけい, 관계
+            乾く  かわく, 마르다
+            機会  きかい, 기회
+            危険だ きけんだ, 위험하다
+            技術  ぎじゅつ, 기술
+            気分  きぶん, 기분
+            競争  きょうそう, 경쟁
+            興味  きょうみ, 흥미
+            比べる くらべる, 비교하다
+            ゲーム  ゲーム, 게임
+            郊外  こうがい, 교외
+            けんか けんか, 싸움
+            心   こころ, 마음
+            細かい こまかい, 작다, 자세하다
+            怖い  こわい, 무섭다
+            探す  さがす, 찾다
+            差す  さす, (우산을) 쓰다
+            さっき さっき, 아까
+            触る  さわる, 만지다
+            残念だ ざんねんだ, 유감이다
+            叱られる しかられる, 꾸중을 듣다
+            失敗  しっぱい, 실패
+            失礼だ しつれいだ, 실례이다
+            調べる しらべる, 조사하다
+            邪魔  じゃま, 방해
+            邪魔になる じゃまになる, 방해가 되다
+            習慣  しゅうかん, 습관
+            十分だ じゅうぶんだ, 충분하다
+            準備  じゅんび, 준비
+            招待  しょうたい, 초대
+            将来  しょうらい, 장래
+            スイッチ スイッチ, 스위치
+            生産  せいさん, 생산
+            成績  せいせき, 성적
+            世話  せわ, 돌봄
+            それに それに, 게다가
+            相談する そうだんする, 상담하다
+            そろそろ そろそろ, 슬슬
+            大事だ だいじだ, 소중하다, 중요하다
+            高い  たかい, 높다, 비싸다
+            だから だから, 그러니까
+            確かだ たしかだ, 확실하다
+            出す  だす, 내다
+            足す  たす, 더하다
+            足りない たりない, 부족하다
+            暖房  だんぼう, 난방
+            チケット チケット, 티켓
+            チャンス チャンス, 찬스
+            中止  ちゅうし, 중지
+            貯金  ちょきん, 저금
+            伝える つたえる, 전하다
+            止める とめる, 멈추다, 세우다
+            とうとう とうとう, 드디어
+            直す  なおす, 고치다
+            なるべく なるべく, 되도록
+            苦い  にがい, 쓰다
+            におい におい, 냄새
+            熱心だ ねっしんだ, 열심이다
+            寝坊  ねぼう, 늦잠
+            眠い  ねむい, 졸리다
+            喉   のど, 목
+            運ぶ  はこぶ, 옮기다, 나르다
+            恥ずかしい はずかしい, 부끄럽다
+            パソコン パソコン, 컴퓨터
+            番組  ばんぐみ, 방송 프로그램
+            パートタイム パートタイム, 파트타임
+            引き出し ひきだし, 서랍
+            拾う  ひろう, 줍다
+            深い  ふかい, 깊다
+            増える ふえる, 늘다, 증가하다
+            複雑  ふくざつ, 복잡
+            踏まれる ふまれる, 밟히다
+            放送  ほうそう, 방송
+            または または, 또는
+            まっすぐ まっすぐ, 똑바로
+            見つかる みつかる, 발견되다
+            迎える むかえる, 맞이하다
+            珍しい めずらしい, 드물다, 희귀하다
+            役に立つ やくにたつ, 도움이 되다
+            約束  やくそく, 약속
+            やっと やっと, 겨우, 드디어
+            やっぱり やっぱり, 역시
+            柔らかい やわらかい, 부드럽다
+            用意  ようい, 준비
+            予約  よやく, 예약
+            寄る  よる, 들르다
+            来週  らいしゅう, 다음 주
+            利用  りよう, 이용
+            理由  りゆう, 이유
+            ルール  ルール, 룰, 규칙
+            レジ  レジ, 계산대
+            レポート レポート, 리포트
+            連絡  れんらく, 연락
+        `,
+        'part4': `
+            あいさつ あいさつ, 인사
+            甘い  あまい, 달다
+            謝る  あやまる, 사과하다
+            うち  うち, 우리, 집
+            エレベーター エレベーター, 엘리베이터
+            おかげさまで おかげさまで, 덕분에요
+            お見舞い おみまい, 병문안
+            お礼  おれい, 사례
+            掛ける かける, 걸다
+            悲しい かなしい, 슬프다
+            借りる かりる, 빌리다
+            厳しい きびしい, 엄하다
+            季節  きせつ, 계절
+            けがをする けがをする, 다치다
+            故障する こしょうする, 고장나다
+            怖い  こわい, 무섭다
+            だんだん だんだん, 점점
+            しばらく しばらく, 잠시
+            出席  しゅっせき, 출석
+            すべる すべる, 미끄러지다
+            ぜひ  ぜひ, 꼭
+            そろそろ そろそろ, 슬슬
+            大事だ だいじだ, 소중하다
+            力   ちから, 힘
+            特に  とくに, 특히
+            直す  なおす, 고치다
+            慣れる なれる, 익숙해지다
+            習う  ならう, 배우다
+            におい におい, 냄새
+            脱ぐ  ぬぐ, 벗다
+            乗り換える のりかえる, 갈아타다
+            甘い  あまい, 달다
+            アルバイト アルバイト, 아르바이트
+            一度  いちど, 한번
+            うれしい うれしい, 기쁘다
+            エスカレーター エスカレーター, 에스컬레이터
+            おかえりなさい おかえりなさい, 다녀오셨어요
+            教える おしえる, 가르치다
+            お土産 おみやげ, 선물
+            ガソリンスタンド ガソリンスタンド, 주유소
+            必ず  かならず, 반드시
+            かぜをひく かぜをひく, 감기에 걸리다
+            危険だ きけんだ, 위험하다
+            規則  きそく, 규칙
+            くださる くださる, 주시다
+            声   こえ, 목소리
+            こちらこそ こちらこそ, 저야말로
+            サンダル サンダル, 샌들
+            したい したい, 하고 싶다
+            十分だ じゅうぶんだ, 충분하다
+            心配だ しんぱいだ, 걱정이다
+            ずっと ずっと, 쭉
+            すみ  すみ, 구석
+            それでも とでも, 그런데도
+            大丈夫だ だいじょうぶだ, 괜찮다
+            小さい ちいさい, 작다
+            ていねいだ ていねいだ, 정중하다
+            なる  なる, 울다
+            なるべく なるべく, 되도록
+            逃げる にげる, 도망치다
+            似る  にる, 닮다
+            眠い  ねむい, 졸리다
+        `
+    };
 
     let wordData = [];
+    let currentPartKey = 'part1'; // 현재 선택된 파트를 추적하는 변수 추가
     let originalWordData = [];
     let isShuffled = false;
     let currentCardIndex = 0;
@@ -926,15 +1236,18 @@
     };
 
     function parseWordData() {
-        console.log("parseWordData: Starting to parse rawWordData.");
-        if (typeof rawWordData !== 'string' || !rawWordData.trim()) {
-            console.error("parseWordData: rawWordData is not a string or is empty.");
+        const currentRawData = allRawData[currentPartKey] || '';
+        console.log(`parseWordData: Starting to parse for part: ${currentPartKey}.`);
+
+        // 기존의 rawWordData 변수를 모두 currentRawData로 변경합니다.
+        if (typeof currentRawData !== 'string' || !currentRawData.trim()) {
+            console.error("parseWordData: currentRawData is not a string or is empty.");
             wordData = [];
             originalWordData = [];
             return;
         }
 
-        const lines = rawWordData.trim().split('\n');
+        const lines = currentRawData.trim().split('\n');
         console.log(`parseWordData: Found ${lines.length} lines.`);
         const wordPattern = /^(.+?)\s+([^,]+?),\s*(.+)$/;
 
@@ -1106,23 +1419,29 @@
         playPauseButtonEl.innerHTML = '<i class="fas fa-play"></i>';
     }
 
+    // `loadMemorizedStatus`, `saveMemorizedStatus`, `updateMemorizedButton` 함수를
+    // 찾아서 아래 코드로 각각 교체합니다.
     function loadMemorizedStatus() {
-        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus_v4');
-        if (storedStatus) { memorizedStatus = JSON.parse(storedStatus); }
+        const storedStatus = localStorage.getItem('japaneseWordMemorizedStatus_v5'); // 버전업
+        if (storedStatus) {
+            memorizedStatus = JSON.parse(storedStatus);
+        } else {
+            memorizedStatus = {
+                'part1': {}, 'part2': {}, 'part3': {}, 'part4': {}
+            };
+        }
     }
     function saveMemorizedStatus() {
-        localStorage.setItem('japaneseWordMemorizedStatus_v4', JSON.stringify(memorizedStatus));
+        localStorage.setItem('japaneseWordMemorizedStatus_v5', JSON.stringify(memorizedStatus));
     }
     function updateMemorizedButton() {
         if (wordData.length === 0 || !wordData[currentCardIndex]) {
-            if(toggleMemorizedButtonEl) {
-                toggleMemorizedButtonEl.textContent = '';
-                toggleMemorizedButtonEl.className = 'text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none';
-            }
+            // ... (기존 코드와 동일)
             return;
         }
         const card = wordData[currentCardIndex];
-        if (memorizedStatus[card.id]) {
+        // 현재 파트의 암기 상태를 확인하도록 수정
+        if (memorizedStatus[currentPartKey] && memorizedStatus[currentPartKey][card.id]) {
             toggleMemorizedButtonEl.textContent = '암기 ✅';
             toggleMemorizedButtonEl.className = 'text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none bg-green-200 hover:bg-green-300 text-green-700';
         } else {
@@ -1130,6 +1449,21 @@
             toggleMemorizedButtonEl.className = 'text-xs sm:text-sm py-1 px-2 rounded-md focus:outline-none bg-gray-200 hover:bg-gray-300 text-gray-700';
         }
     }
+
+
+    // `toggleMemorizedButtonEl`의 이벤트 리스너를 찾아 아래와 같이 수정합니다.
+    toggleMemorizedButtonEl.addEventListener('click', () => {
+        if (wordData.length === 0 || !wordData[currentCardIndex]) return;
+        const card = wordData[currentCardIndex];
+        // 현재 파트에 대한 암기 상태 객체가 없으면 생성
+        if (!memorizedStatus[currentPartKey]) {
+            memorizedStatus[currentPartKey] = {};
+        }
+        // 현재 파트의 암기 상태를 토글
+        memorizedStatus[currentPartKey][card.id] = !memorizedStatus[currentPartKey][card.id];
+        updateMemorizedButton();
+        saveMemorizedStatus();
+    });
 
     function displayCard() {
         if (wordData.length === 0) {
@@ -1488,10 +1822,54 @@
         loadTestItem();
     });
 
+    // initializeApp 함수 바로 위에 아래 새로운 함수를 추가합니다.
+    function switchPart(newPartKey, isInitialLoad = false) {
+        if (!isInitialLoad && currentPartKey === newPartKey) {
+            settingsModalEl.style.display = 'none';
+            return;
+        }
+
+        if(isAutoPlaying) stopAutoPlay();
+
+        currentPartKey = newPartKey;
+        localStorage.setItem('japaneseAppCurrentPart_Word', newPartKey); // 새 키 사용
+
+        // UI에서 현재 활성화된 파트 버튼 스타일 업데이트
+        document.querySelectorAll('.part-select-button').forEach(button => {
+            if (button.dataset.part === newPartKey) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+
+        // 새 파트의 데이터로 앱 상태 리셋
+        initializeApp();
+
+        if(!isInitialLoad) {
+            const partButton = document.querySelector(`.part-select-button.active`);
+            if(partButton && typeof alert !== 'undefined') {
+                alert(`'${partButton.textContent}' 파트로 전환되었습니다.`);
+            }
+        }
+        if(settingsModalEl) settingsModalEl.style.display = 'none';
+    }
+
+
+    // 기존 initializeApp 함수를 아래 내용으로 **교체**합니다.
     function initializeApp() {
-        console.log("initializeApp: Starting application initialization.");
-        parseWordData();
-        loadMemorizedStatus();
+        console.log("initializeApp: Initializing for part:", currentPartKey);
+
+        parseWordData(); // 현재 파트 키에 따라 데이터를 파싱
+
+        if (!memorizedStatus[currentPartKey]) {
+            memorizedStatus[currentPartKey] = {};
+        }
+
+        currentCardIndex = 0;
+        isShuffled = false;
+        endTestMode();
+
         const buttonsToDisable = [
             playPauseButtonEl, settingsButtonEl,
             revealHiraganaButton, revealMeaningButton,
@@ -1504,23 +1882,43 @@
             console.log("initializeApp: Word data found. Length:", wordData.length);
             hiraganaVisible = false;
             meaningVisible = false;
-            kanjiEtymologyVisible = false; // Initial global state for etymology
+            kanjiEtymologyVisible = false;
             displayCard();
             buttonsToDisable.forEach(btn => { if(btn) btn.disabled = false; });
         } else {
-            console.warn("initializeApp: No word data found after parsing. Displaying 'No data' message.");
+            console.warn("initializeApp: No word data found. Displaying 'No data' message.");
             displayCard();
             buttonsToDisable.forEach(btn => { if(btn) btn.disabled = true; });
         }
+
         learningModeContainerEl.classList.remove('hidden');
         testModeContainerEl.classList.add('hidden');
         appTopBarEl.classList.remove('hidden');
         switchModeInSettingsButtonEl.innerHTML = '<i class="fas fa-vial"></i> 학습/테스트 모드로';
         updateSettingsButtonsState();
-        console.log("initializeApp: Application initialization complete.");
+        console.log("initializeApp: Initialization complete for part:", currentPartKey);
     }
 
-    initializeApp();
+    // 스크립트 맨 마지막에 있던 initializeApp(); 호출을 찾아서 아래 코드로 교체합니다.
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. 암기 상태 로드
+        loadMemorizedStatus();
+
+        // 2. 마지막으로 선택한 파트 불러오기 (없으면 기본값)
+        const savedPart = localStorage.getItem('japaneseAppCurrentPart_Word') || 'part1';
+
+        // 3. 파트 전환 버튼에 이벤트 리스너 추가
+        document.querySelectorAll('.part-select-button').forEach(button => {
+            button.addEventListener('click', () => {
+                switchPart(button.dataset.part);
+            });
+        });
+
+        // 4. 앱 시작
+        switchPart(savedPart, true); // true는 최초 로딩임을 의미
+    });
+
+    // 기존의 initializeApp(); 단독 호출은 지워주세요.
 </script>
 </body>
 </html>
