@@ -229,12 +229,22 @@
         </button>
     </div>
 </div>
-
 <div id="allWordsModal" class="modal">
     <div class="modal-content">
-        <span class="close-button" id="closeAllWordsModalButton">&times;</span>
-        <h2 class="text-xl sm:text-2xl font-bold text-center text-indigo-600 mb-4">전체 단어 목록</h2>
-        <div id="allWordsListEl" class="space-y-2">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200 mb-4">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">전체 단어 목록</h2>
+            <span class="close-button" id="closeAllWordsModalButton">&times;</span>
+        </div>
+
+        <div class="mb-3">
+            <input type="text" id="wordSearchInput" placeholder="단어, 발음, 뜻으로 검색..." class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500">
+        </div>
+
+        <div class="flex justify-between items-center text-sm text-gray-600 font-medium mb-2 px-2">
+            <span id="wordListStats"></span>
+        </div>
+
+        <div id="allWordsListEl" class="max-h-[50vh] overflow-y-auto">
         </div>
     </div>
 </div>
@@ -1742,35 +1752,96 @@
         }
         settingsModalEl.style.display = 'none';
     });
+    // 기존의 openAllWordsListFromSettingsButtonEl.addEventListener('click', ...) 함수를 찾아서 아래 코드로 완전히 교체하세요.
+
     openAllWordsListFromSettingsButtonEl.addEventListener('click', () => {
         settingsModalEl.style.display = 'none';
         if (wordData.length === 0) return;
-        allWordsListEl.innerHTML = '';
+
         const currentDataToDisplay = isShuffled ? wordData : originalWordData;
-        currentDataToDisplay.forEach((item) => {
-            const listItem = document.createElement('div');
-            listItem.classList.add('p-2', 'rounded-md', 'cursor-pointer', 'hover:bg-gray-100', 'flex', 'justify-between', 'items-center', (memorizedStatus[item.id] ? 'memorized-item' : 'not-memorized-item'));
-            const wordInfoSpan = document.createElement('span');
-            wordInfoSpan.innerHTML = `<span class="word-display">${item.form}</span> <span class="reading-display">(${item.reading})</span>: <span class="meaning-display">${item.meaning}</span>`;
-            wordInfoSpan.classList.add('text-sm', 'sm:text-base');
-            const statusSpan = document.createElement('span');
-            statusSpan.textContent = memorizedStatus[item.id] ? '✅' : '❌';
-            statusSpan.classList.add('text-xs', 'sm:text-sm', 'ml-2', 'font-semibold', (memorizedStatus[item.id] ? 'text-green-600' : 'text-red-500'));
-            listItem.appendChild(wordInfoSpan);
-            listItem.appendChild(statusSpan);
-            listItem.addEventListener('click', () => {
-                currentCardIndex = wordData.findIndex(wd => wd.id === item.id);
-                if (currentCardIndex === -1 && originalWordData.length > 0) {
-                    currentCardIndex = originalWordData.findIndex(wd => wd.id === item.id);
-                }
-                hiraganaVisible = false; // Reset visibility for selected card
-                meaningVisible = false;
-                // kanjiEtymologyVisible is global
-                displayCard();
-                allWordsModalEl.style.display = 'none';
+        const searchInput = document.getElementById('wordSearchInput');
+        const statsEl = document.getElementById('wordListStats');
+        const listEl = document.getElementById('allWordsListEl');
+
+        // 단어 목록을 화면에 그리는 함수
+        const renderWordList = (wordArray) => {
+            listEl.innerHTML = ''; // 기존 목록 초기화
+
+            if (wordArray.length === 0) {
+                listEl.innerHTML = '<p class="text-center text-gray-500 py-6">일치하는 단어가 없습니다.</p>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            wordArray.forEach((item, index) => {
+                const listItem = document.createElement('div');
+                const isMemorized = memorizedStatus[currentPartKey]?.[item.id];
+
+                // 더 깔끔한 디자인을 위한 클래스 설정
+                listItem.className = `flex items-center gap-3 p-3 border-b border-gray-200 last:border-b-0 cursor-pointer hover:bg-gray-100 ${isMemorized ? 'bg-green-50/50' : ''}`;
+
+                // 1. 번호
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'w-8 text-right text-xs font-medium text-gray-500';
+                numberSpan.textContent = `${index + 1}.`;
+
+                // 2. 단어 정보 (단어 + 발음)
+                const wordInfoDiv = document.createElement('div');
+                wordInfoDiv.className = 'flex-grow';
+                wordInfoDiv.innerHTML = `
+                <div class="font-semibold text-gray-800 word-display">${item.form}</div>
+                <div class="text-sm text-gray-500 reading-display">${item.reading}</div>
+            `;
+
+                // 3. 뜻
+                const meaningSpan = document.createElement('div');
+                meaningSpan.className = 'w-2/5 text-sm text-gray-700 meaning-display';
+                meaningSpan.textContent = item.meaning;
+
+                // 4. 암기 상태 아이콘
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'text-lg pl-2';
+                statusSpan.textContent = isMemorized ? '✅' : '❌';
+
+                listItem.append(numberSpan, wordInfoDiv, meaningSpan, statusSpan);
+
+                // 목록 아이템 클릭 이벤트
+                listItem.addEventListener('click', () => {
+                    const targetIndex = wordData.findIndex(wd => wd.id === item.id);
+                    if (targetIndex !== -1) {
+                        currentCardIndex = targetIndex;
+                        hiraganaVisible = false;
+                        meaningVisible = false;
+                        displayCard();
+                        allWordsModalEl.style.display = 'none';
+                    }
+                });
+
+                fragment.appendChild(listItem);
             });
-            allWordsListEl.appendChild(listItem);
-        });
+            listEl.appendChild(fragment);
+        };
+
+        // 통계 계산 및 표시
+        const totalCount = currentDataToDisplay.length;
+        const memorizedCount = currentDataToDisplay.filter(item => memorizedStatus[currentPartKey]?.[item.id]).length;
+        statsEl.textContent = `총 ${totalCount}개 | 암기 ${memorizedCount}개`;
+
+        // 검색 입력창 초기화 및 전체 목록 표시
+        searchInput.value = '';
+        renderWordList(currentDataToDisplay);
+
+        // 검색창 키 입력 이벤트 리스너
+        searchInput.onkeyup = () => {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const filteredData = currentDataToDisplay.filter(item =>
+                item.form.toLowerCase().includes(searchTerm) ||
+                item.reading.toLowerCase().includes(searchTerm) ||
+                item.meaning.toLowerCase().includes(searchTerm)
+            );
+            renderWordList(filteredData);
+        };
+
         allWordsModalEl.style.display = 'block';
     });
     switchModeInSettingsButtonEl.addEventListener('click', toggleAppMode);
